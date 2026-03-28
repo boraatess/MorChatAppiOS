@@ -1,0 +1,127 @@
+// MARK: - Onboarding
+"onboarding_continue" = "Continue";
+"onboarding_skip" = "Skip";
+"onboarding_start" = "Start";
+
+"onboarding_title_1" = "Private Live Streams";
+"onboarding_desc_1" = "Meet with one-on-one private live streams just for you. Communicate directly with streamers, chat in a crowd-free environment.";
+
+"onboarding_title_2" = "Every Topic, Every Age";
+"onboarding_desc_2" = "List all streamers according to the interests you choose.";
+
+"onboarding_title_3" = "Your Favorite Streamers";
+"onboarding_desc_3" = "Follow your favorite streamers and receive notifications when they start broadcasting.";
+
+"onboarding_title_4" = "Premium Experience";
+"onboarding_desc_4" = "No extra fees, no gifts. Just buy tokens and continue.";
+
+"onboarding_title_5" = "Safe & Private";
+"onboarding_desc_5" = "All calls are end-to-end encrypted. Your privacy is our priority.";
+
+// MARK: - Login Screen
+"login_gmail" = "login with gmail";
+"login_apple" = "Sign in with Apple";
+"login_contracts" = "Contracts text";
+"login_gdpr" = "GDPR text";
+"login_age" = "I am over 18 years old";
+"login_guide" = "Guide Login";
+"login_error_title" = "ERROR";
+"login_error_terms" = "You must accept all terms to continue.";
+
+// MARK: - Guide Login
+"login_guide_subtitle" = "Log in to your guide account";
+"login_guide_email" = "Your e-mail address";
+"login_guide_code" = "Guide code";
+"login_guide_become" = "Do you want to become a guide?";
+"login_guide_login_button" = "Log In";
+
+// MARK: - Become Guide Screen
+"become_guide_title" = "Do You Want to Become a Guide?";
+"become_guide_subtitle" = "Guides can earn money points based on their broadcast duration. If you want to become a guide too, contact us!";
+"become_guide_select_topics" = "Select your broadcast topics (min 1, max 5)";
+"become_guide_name_placeholder" = "Name Surname";
+"become_guide_phone_placeholder" = "5XX-XXX-XX-XX";
+"become_guide_insta_placeholder" = "Instagram username or profile URL";
+"become_guide_apply" = "Apply";
+
+// MARK: - OTP Screen
+"otp_title" = "Verification Code";
+"otp_subtitle" = "Enter the 6-digit code sent to %@";
+"otp_resend_text" = "↻ Resend code in: %d";
+"otp_continue_button" = "Continue";
+"otp_success_title" = "Success!";
+"otp_success_message" = "Redirecting to Home...";
+"otp_error_title" = "Error";
+
+// MARK: - Home Screen
+"home_error_title" = "Error";
+
+// MARK: - Publisher Detail
+"pub_status_online" = "Online";
+"pub_status_away" = "Away";
+"pub_call_now" = "Call Now";
+"pub_voice_call" = "Voice Call";
+"pub_footer_info" = "The streamer is currently offline, but you can try calling them to reach them.\nYou can also like the streamer to receive notifications when they go back online.";
+"pub_name_unknown" = "Unknown";
+"pub_about_default" = "Chat";
+
+// MARK: - Action Sheet
+"action_add_favorites" = "Add to Favorites";
+"action_remove_favorites" = "Remove from Favorites";
+
+"action_block" = "Block";
+"action_report" = "Report";
+
+// MARK: - Tabs
+"tab_home" = "Live";
+"tab_favorites" = "Likes";
+"tab_notifications" = "Notifications";
+"tab_profile" = "My Account";
+
+// MARK: - Profile Screen
+"profile_title" = "My Account";
+"profile_subtitle" = "Determine your interest, chat.";
+"profile_logout" = "Log Out";
+"profile_logout_alert_title" = "Log Out";
+"profile_logout_alert_message" = "Are you sure you want to log out?";
+"profile_logout_cancel" = "Cancel";
+
+// MARK: - Favorites
+"fav_title" = "Guides I Like";
+"fav_count_singular" = "%d guide";
+"fav_count_plural" = "%d guides";
+"fav_empty_title" = "List is Empty";
+"fav_empty_desc" = "Add publishers you like and get notified when they are online.";
+
+// MARK: - Notifications
+"notif_title" = "Notifications";
+"notif_subtitle" = "Missed calls and Surprises are on this screen";
+"notif_empty_title" = "List is Empty";
+"notif_empty_desc" = "If a publisher calls you and can't reach you, it will be shown here.";
+
+// MARK: - Splash
+"splash_subtitle" = "One-on-one private live chat";
+
+// MARK: - Menu Items
+"menu_interests" = "Interests";
+"menu_rules" = "App Rules";
+"menu_blocked" = "Blocked Users";
+"menu_settings" = "Settings";
+"menu_help" = "Help & Support";
+
+// MARK: - FAQ
+"faq_title" = "Frequently Asked Questions";
+"faq_contact" = "Contact Us";
+"faq_q1" = "How can I purchase tokens?";
+"faq_a1" = "You can purchase tokens from Profile > Wallet.";
+"faq_q2" = "How can I chat with a streamer?";
+"faq_a2" = "You can send messages by joining the live stream.";
+"faq_q3" = "How do I block a streamer?";
+"faq_a3" = "You can press the block button on their profile.";
+"faq_q4" = "When do my tokens arrive?";
+"faq_a4" = "They are instantly credited to your account after payment.";
+"faq_q5" = "How can I delete my account?";
+"faq_a5" = "You can delete it from Settings > Delete Account.";
+"faq_q6" = "How can I make a report?";
+"faq_a6" = "You can use the report button on the profile page.";
+

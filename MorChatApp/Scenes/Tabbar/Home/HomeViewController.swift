@@ -1,0 +1,217 @@
+//
+//  HomeViewController.swift
+//  MorChatApp
+//
+//  Created by bora ateş on 21.01.2026.
+//
+
+import Foundation
+import UIKit
+import SnapKit
+
+class HomeViewController: BaseVC {
+
+    private let viewModel = HomeViewModel()
+
+    private lazy var tagCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
+        layout.minimumInteritemSpacing = 8
+        
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.showsHorizontalScrollIndicator = false
+        cv.register(TagFilterCell.self, forCellWithReuseIdentifier: "TagFilterCell")
+        cv.delegate = self
+        cv.dataSource = self
+        return cv
+    }()
+
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 6
+        layout.minimumLineSpacing = 6
+        
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.register(UserCardCell.self,
+                    forCellWithReuseIdentifier: UserCardCell.identifier)
+        cv.delegate = self
+        cv.dataSource = self
+        return cv
+    }()
+
+    // 🔥 TEK DATA SOURCE
+    private var users: [UserCardModel] = []
+    
+    private var tags: [String] = []
+    private var selectedTag: String?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        navigationController?.navigationBar.isHidden = true
+
+        setupUI()
+        
+        viewModel.output = self
+        viewModel.viewDidLoad()
+    }
+}
+
+private extension HomeViewController {
+
+    func setupUI() {
+        view.addSubview(tagCollectionView)
+        view.addSubview(collectionView)
+        
+        tagCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(headerView.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(44)
+        }
+        
+        collectionView.snp.makeConstraints {
+            $0.top.equalTo(tagCollectionView.snp.bottom).offset(8)
+            $0.leading.trailing.equalToSuperview().inset(8)
+            $0.bottom.equalToSuperview()
+        }
+    }
+}
+
+// MARK: - CollectionView
+extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if collectionView == tagCollectionView {
+            return tags.count
+        }
+        return users.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        if collectionView == tagCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TagFilterCell", for: indexPath) as! TagFilterCell
+            let tag = tags[indexPath.row]
+            cell.configure(with: tag, isSelected: tag == selectedTag)
+            return cell
+        }
+        
+        let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: UserCardCell.identifier,
+            for: indexPath
+        ) as! UserCardCell
+        
+        // 🔥 SADECE users kullan
+        cell.configure(with: users[indexPath.row])
+        
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if collectionView == tagCollectionView {
+            let tag = tags[indexPath.row]
+            
+            selectedTag = (selectedTag == tag) ? nil : tag
+            
+            viewModel.filterByTag(selectedTag)
+            tagCollectionView.reloadData()
+            return
+        }
+        
+        // 🔥 DOĞRU MODEL
+        let selectedUser = users[indexPath.row]
+        
+        let detailVC = PublisherDetailViewController(profile: selectedUser.profile)
+        detailVC.hidesBottomBarWhenPushed = true
+        
+        navigationController?.pushViewController(detailVC, animated: true)
+    }
+}
+
+// MARK: - ViewModel Output
+extension HomeViewController: HomeViewModelOutputprotocol {
+    
+    func didFetchUsers(with users: [UserCardModel]) {
+        self.users = users
+        
+        DispatchQueue.main.async {
+            self.collectionView.reloadData()
+        }
+    }
+    
+    func didFetchTags(_ tags: [String]) {
+        self.tags = tags
+        
+        DispatchQueue.main.async {
+            self.tagCollectionView.reloadData()
+        }
+    }
+    
+    func didFail(with error: String) {
+        showAutoDismissAlert(
+            title: "home_error_title".localized,
+            message: error,
+            duration: 2.0
+        )
+    }
+}
+
+// MARK: - Layout
+extension HomeViewController: UICollectionViewDelegateFlowLayout {
+
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        if collectionView == tagCollectionView {
+            return .zero
+        }
+
+        let padding: CGFloat = 4
+        let spacing: CGFloat = 6
+        
+        let total = padding * 2 + spacing
+        let width = (collectionView.bounds.width - total) / 2
+        
+        let height = width * 1.35
+        return CGSize(width: width, height: height)
+    }
+}
+
+// MARK: - TagFilterCell
+final class TagFilterCell: UICollectionViewCell {
+    private let label: UILabel = {
+        let l = UILabel()
+        l.textColor = .white
+        l.font = .systemFont(ofSize: 13, weight: .semibold)
+        return l
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        contentView.layer.cornerRadius = 18
+        contentView.layer.borderWidth = 1
+        contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.6).cgColor
+        contentView.addSubview(label)
+        label.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16))
+        }
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+    
+    func configure(with tag: String, isSelected: Bool) {
+        label.text = tag
+        if isSelected {
+            contentView.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+            contentView.layer.borderColor = UIColor.white.cgColor
+        } else {
+            contentView.backgroundColor = .clear
+            contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        }
+    }
+}

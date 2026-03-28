@@ -1,0 +1,127 @@
+// MARK: - Onboarding
+"onboarding_continue" = "Devam";
+"onboarding_skip" = "Atla";
+"onboarding_start" = "Başla";
+
+"onboarding_title_1" = "Özel Canlı Yayınlar";
+"onboarding_desc_1" = "Size özel birebir canlı yayınlarla tanışın. Yayıncılarla direkt iletişim kurun, kalabalıksız ortamda sohbet edin.";
+
+"onboarding_title_2" = "Her Konudan, Her Yaştan";
+"onboarding_desc_2" = "Tüm yayıncıları, senin seçtiğin ilgi alanına göre listelersin.";
+
+"onboarding_title_3" = "Favori Yayıncılarınız";
+"onboarding_desc_3" = "En sevdiğiniz yayıncıları takip edin ve yayına başladıklarında bildirim alın.";
+
+"onboarding_title_4" = "Premium Deneyim";
+"onboarding_desc_4" = "Ekstra ücret yok, hediye yok. Sadece jeton al ve devam et.";
+
+"onboarding_title_5" = "Güvenli & Gizli";
+"onboarding_desc_5" = "Tüm görüşmeler uçtan uca şifreli. Gizliliğiniz önceliğimizdir.";
+
+// MARK: - Login Screen
+"login_gmail" = "gmail ile giriş yap";
+"login_apple" = "Apple ile Giriş";
+"login_contracts" = "Sözleşme metni";
+"login_gdpr" = "KVKK metni";
+"login_age" = "18 yaşından büyüğüm";
+"login_guide" = "Rehber Girişi";
+"login_error_title" = "HATA";
+"login_error_terms" = "Devam etmek için tüm şartları kabul etmelisiniz.";
+
+// MARK: - Guide Login
+"login_guide_subtitle" = "Rehber hesabınıza giriş yapın";
+"login_guide_email" = "E-posta adresiniz";
+"login_guide_code" = "Rehber kodunuz";
+"login_guide_become" = "Rehber olmak ister misiniz?";
+"login_guide_login_button" = "Giriş Yap";
+
+// MARK: - Become Guide Screen
+"become_guide_title" = "Rehber Olmak İster Misiniz?";
+"become_guide_subtitle" = "Rehberler yayın sürelerine göre para kazanabilirler. Siz de rehber olmak istiyorsanız bize ulaşın!";
+"become_guide_select_topics" = "Yayın konularınızı seçin (en az 1, en fazla 5)";
+"become_guide_name_placeholder" = "Ad Soyad";
+"become_guide_phone_placeholder" = "5XX-XXX-XX-XX";
+"become_guide_insta_placeholder" = "Instagram kullanıcı adı veya profil linki";
+"become_guide_apply" = "Başvur";
+
+// MARK: - OTP Screen
+"otp_title" = "Doğrulama Kodu";
+"otp_subtitle" = "%@ numarasına gönderilen 6 haneli kodu girin";
+"otp_resend_text" = "↻ Kodu tekrar gönder: %d";
+"otp_continue_button" = "Devam Et";
+"otp_success_title" = "Başarılı!";
+"otp_success_message" = "Ana ekrana yönlendiriliyorsunuz...";
+"otp_error_title" = "Hata";
+
+// MARK: - Home Screen
+"home_error_title" = "Hata";
+
+// MARK: - Publisher Detail
+"pub_status_online" = "Çevrimiçi";
+"pub_status_away" = "Uzakta";
+"pub_call_now" = "Şimdi Ara";
+"pub_voice_call" = "Sesli Arama";
+"pub_footer_info" = "Yayıncı şu an çevrimdışı, ancak ona ulaşmak için aramayı deneyebilirsin.\nÇevrimiçi olduğunda bildirim almak için yayıncıyı beğenebilirsin.";
+"pub_name_unknown" = "Bilinmeyen";
+"pub_about_default" = "Muhabbet";
+
+// MARK: - Action Sheet
+"action_add_favorites" = "Favorilere Ekle";
+"action_remove_favorites" = "Favorilerden Çıkar";
+
+"action_block" = "Engelle";
+"action_report" = "Rapor Et";
+
+// MARK: - Tabs
+"tab_home" = "Canlı";
+"tab_favorites" = "Beğeniler";
+"tab_notifications" = "Bildirimler";
+"tab_profile" = "Hesabım";
+
+// MARK: - Profile Screen
+"profile_title" = "Hesabım";
+"profile_subtitle" = "İlgi alanlarını belirle, sohbete baş.";
+"profile_logout" = "Çıkış Yap";
+"profile_logout_alert_title" = "Çıkış Yap";
+"profile_logout_alert_message" = "Çıkış yapmak istediğinize emin misiniz?";
+"profile_logout_cancel" = "İptal";
+
+// MARK: - Favorites
+"fav_title" = "Beğendiğim Rehberler";
+"fav_count_singular" = "%d rehber";
+"fav_count_plural" = "%d rehber";
+"fav_empty_title" = "Liste Boş";
+"fav_empty_desc" = "Beğendiğin yayıncıları ekle ve online olduğunda bildirim al.";
+
+// MARK: - Notifications
+"notif_title" = "Bildirimler";
+"notif_subtitle" = "Cevapsız aramalar ve Sürprizler bu ekrandadır";
+"notif_empty_title" = "Liste Boş";
+"notif_empty_desc" = "Bir yayıncı sohbet etmek için seni arayıp ulaşamazsa burada gösterilir.";
+
+// MARK: - Splash
+"splash_subtitle" = "Birebir özel canlı sohbet";
+
+// MARK: - Menu Items
+"menu_interests" = "İlgi Alanlarım";
+"menu_rules" = "Uygulama Kuralları";
+"menu_blocked" = "Engellenen Kullanıcılar";
+"menu_settings" = "Ayarlar";
+"menu_help" = "Yardım ve Destek";
+
+// MARK: - FAQ
+"faq_title" = "Sıkça Sorulan Sorular";
+"faq_contact" = "Bize Ulaşın";
+"faq_q1" = "Jeton nasıl satın alabilirim?";
+"faq_a1" = "Profil > Cüzdan kısmından jeton satın alabilirsiniz.";
+"faq_q2" = "Yayıncıyla nasıl sohbet edebilirim?";
+"faq_a2" = "Canlı yayına katılarak mesaj gönderebilirsiniz.";
+"faq_q3" = "Bir yayıncıyı nasıl engellerim?";
+"faq_a3" = "Profiline girip engelle butonuna basabilirsiniz.";
+"faq_q4" = "Jetonlarım ne zaman düşer?";
+"faq_a4" = "Ödeme sonrası anında hesabınıza yansır.";
+"faq_q5" = "Hesabımı nasıl silebilirim?";
+"faq_a5" = "Ayarlar > Hesap Sil bölümünden silebilirsiniz.";
+"faq_q6" = "Şikayette nasıl bulunabilirim?";
+"faq_a6" = "Profil sayfasındaki şikayet butonunu kullanabilirsiniz.";
+

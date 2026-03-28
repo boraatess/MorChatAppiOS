@@ -1,0 +1,533 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		335A71BF2F578A730003EFF8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71BE2F578A730003EFF8 /* FirebaseAuth */; };
+		335A71C12F578A730003EFF8 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71C02F578A730003EFF8 /* FirebaseCrashlytics */; };
+		335A71C32F578A730003EFF8 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71C22F578A730003EFF8 /* FirebaseDatabase */; };
+		335A71C52F578A730003EFF8 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71C42F578A730003EFF8 /* FirebaseFirestore */; };
+		335A71CE2F5794DB0003EFF8 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71CD2F5794DB0003EFF8 /* Kingfisher */; };
+		335A71FC2F661C100003EFF8 /* WebRTC in Frameworks */ = {isa = PBXBuildFile; productRef = 335A71FB2F661C100003EFF8 /* WebRTC */; };
+		335A72062F71FAF50003EFF8 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 335A72052F71FAF50003EFF8 /* GoogleSignIn */; };
+		335A72082F71FAF50003EFF8 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 335A72072F71FAF50003EFF8 /* GoogleSignInSwift */; };
+		335A72182F731E4C0003EFF8 /* IQKeyboardManagerSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 335A72172F731E4C0003EFF8 /* IQKeyboardManagerSwift */; };
+		335A74212F75D8020003EFF8 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 335A74202F75D8020003EFF8 /* FirebaseMessaging */; };
+		3399E8922F20532E005C929A /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 3399E8912F20532E005C929A /* SocketIO */; };
+		3399E8952F393C07005C929A /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3399E8942F393C07005C929A /* SnapKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		3399E8422F20350F005C929A /* MorChatApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MorChatApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3399E8542F203511005C929A /* Exceptions for "MorChatApp" folder in "MorChatApp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3399E8412F20350F005C929A /* MorChatApp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		3399E8442F20350F005C929A /* MorChatApp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				3399E8542F203511005C929A /* Exceptions for "MorChatApp" folder in "MorChatApp" target */,
+			);
+			path = MorChatApp;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		3399E83F2F20350F005C929A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				335A74212F75D8020003EFF8 /* FirebaseMessaging in Frameworks */,
+				335A71C32F578A730003EFF8 /* FirebaseDatabase in Frameworks */,
+				3399E8922F20532E005C929A /* SocketIO in Frameworks */,
+				335A71CE2F5794DB0003EFF8 /* Kingfisher in Frameworks */,
+				335A71C12F578A730003EFF8 /* FirebaseCrashlytics in Frameworks */,
+				335A71BF2F578A730003EFF8 /* FirebaseAuth in Frameworks */,
+				335A72082F71FAF50003EFF8 /* GoogleSignInSwift in Frameworks */,
+				335A71FC2F661C100003EFF8 /* WebRTC in Frameworks */,
+				3399E8952F393C07005C929A /* SnapKit in Frameworks */,
+				335A71C52F578A730003EFF8 /* FirebaseFirestore in Frameworks */,
+				335A72182F731E4C0003EFF8 /* IQKeyboardManagerSwift in Frameworks */,
+				335A72062F71FAF50003EFF8 /* GoogleSignIn in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		335A741F2F75D8020003EFF8 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		3399E8392F20350F005C929A = {
+			isa = PBXGroup;
+			children = (
+				3399E8442F20350F005C929A /* MorChatApp */,
+				335A741F2F75D8020003EFF8 /* Frameworks */,
+				3399E8432F20350F005C929A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		3399E8432F20350F005C929A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				3399E8422F20350F005C929A /* MorChatApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3399E8412F20350F005C929A /* MorChatApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3399E8552F203511005C929A /* Build configuration list for PBXNativeTarget "MorChatApp" */;
+			buildPhases = (
+				3399E83E2F20350F005C929A /* Sources */,
+				3399E83F2F20350F005C929A /* Frameworks */,
+				3399E8402F20350F005C929A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				3399E8442F20350F005C929A /* MorChatApp */,
+			);
+			name = MorChatApp;
+			packageProductDependencies = (
+				3399E8912F20532E005C929A /* SocketIO */,
+				3399E8942F393C07005C929A /* SnapKit */,
+				335A71BE2F578A730003EFF8 /* FirebaseAuth */,
+				335A71C02F578A730003EFF8 /* FirebaseCrashlytics */,
+				335A71C22F578A730003EFF8 /* FirebaseDatabase */,
+				335A71C42F578A730003EFF8 /* FirebaseFirestore */,
+				335A71CD2F5794DB0003EFF8 /* Kingfisher */,
+				335A71FB2F661C100003EFF8 /* WebRTC */,
+				335A72052F71FAF50003EFF8 /* GoogleSignIn */,
+				335A72072F71FAF50003EFF8 /* GoogleSignInSwift */,
+				335A72172F731E4C0003EFF8 /* IQKeyboardManagerSwift */,
+				335A74202F75D8020003EFF8 /* FirebaseMessaging */,
+			);
+			productName = MorChatApp;
+			productReference = 3399E8422F20350F005C929A /* MorChatApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		3399E83A2F20350F005C929A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					3399E8412F20350F005C929A = {
+						CreatedOnToolsVersion = 26.2;
+					};
+				};
+			};
+			buildConfigurationList = 3399E83D2F20350F005C929A /* Build configuration list for PBXProject "MorChatApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				tr,
+			);
+			mainGroup = 3399E8392F20350F005C929A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				3399E8902F20532E005C929A /* XCRemoteSwiftPackageReference "socket" */,
+				3399E8932F393C07005C929A /* XCRemoteSwiftPackageReference "SnapKit" */,
+				335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				335A71CC2F5794DB0003EFF8 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				335A71FA2F661C100003EFF8 /* XCRemoteSwiftPackageReference "WebRTC" */,
+				335A72042F71FAF50003EFF8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				335A72162F731E4C0003EFF8 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 3399E8432F20350F005C929A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				3399E8412F20350F005C929A /* MorChatApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		3399E8402F20350F005C929A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		3399E83E2F20350F005C929A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3399E8562F203511005C929A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MorChatApp/MorChatApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 32QGKVDU76;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MorChatApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MorChat;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.boraates.MorChatApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		3399E8572F203511005C929A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MorChatApp/MorChatApp.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = 32QGKVDU76;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MorChatApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MorChat;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.boraates.MorChatApp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		3399E8582F203511005C929A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 32QGKVDU76;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		3399E8592F203511005C929A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 32QGKVDU76;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		3399E83D2F20350F005C929A /* Build configuration list for PBXProject "MorChatApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3399E8582F203511005C929A /* Debug */,
+				3399E8592F203511005C929A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3399E8552F203511005C929A /* Build configuration list for PBXNativeTarget "MorChatApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3399E8562F203511005C929A /* Debug */,
+				3399E8572F203511005C929A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
+		335A71CC2F5794DB0003EFF8 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.7.0;
+			};
+		};
+		335A71FA2F661C100003EFF8 /* XCRemoteSwiftPackageReference "WebRTC" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stasel/WebRTC";
+			requirement = {
+				kind = exactVersion;
+				version = 116.0.0;
+			};
+		};
+		335A72042F71FAF50003EFF8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+		335A72162F731E4C0003EFF8 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hackiftekhar/IQKeyboardManager.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.2;
+			};
+		};
+		3399E8902F20532E005C929A /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		3399E8932F393C07005C929A /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		335A71BE2F578A730003EFF8 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		335A71C02F578A730003EFF8 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		335A71C22F578A730003EFF8 /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		335A71C42F578A730003EFF8 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		335A71CD2F5794DB0003EFF8 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71CC2F5794DB0003EFF8 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
+		335A71FB2F661C100003EFF8 /* WebRTC */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71FA2F661C100003EFF8 /* XCRemoteSwiftPackageReference "WebRTC" */;
+			productName = WebRTC;
+		};
+		335A72052F71FAF50003EFF8 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A72042F71FAF50003EFF8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		335A72072F71FAF50003EFF8 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A72042F71FAF50003EFF8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+		335A72172F731E4C0003EFF8 /* IQKeyboardManagerSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A72162F731E4C0003EFF8 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */;
+			productName = IQKeyboardManagerSwift;
+		};
+		335A74202F75D8020003EFF8 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 335A71BD2F578A730003EFF8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		3399E8912F20532E005C929A /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3399E8902F20532E005C929A /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
+		3399E8942F393C07005C929A /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3399E8932F393C07005C929A /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 3399E83A2F20350F005C929A /* Project object */;
+}
