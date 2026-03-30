@@ -2,18 +2,26 @@ import Foundation
 
 struct UserModel {
     let uid: String
-    let name: String?
+    var name: String?
     let email: String?
     let photoURL: String?
     let createdAt: Date
+    var interests: [String]?
+    var tagList: [Int]?
+    let age: Int?
+    var status: String?
     
     var dictionary: [String: Any] {
         return [
-            "uid": uid,
+            "id": uid,
             "name": name ?? "",
             "email": email ?? "",
-            "photoURL": photoURL ?? "",
-            "createdAt": createdAt
+            "profileImage": photoURL ?? "",
+            "createdAt": createdAt,
+            "tagList": tagList ?? [],
+            "interests": interests ?? [],
+            "age": age ?? 0,
+            "status": status ?? "Online"
         ]
     }
 }

@@ -21,11 +21,10 @@ final class FavoritesViewController: BaseVC {
         layout.minimumInteritemSpacing = 12
         layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
 
-
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
         cv.showsVerticalScrollIndicator = false
-        cv.register(UserCardCell.self, forCellWithReuseIdentifier: "UserCardCell")
+        cv.register(PublisherCardCell.self, forCellWithReuseIdentifier: PublisherCardCell.identifier)
         cv.dataSource = self
         cv.delegate = self
         return cv
@@ -130,9 +129,9 @@ extension FavoritesViewController: UICollectionViewDataSource, UICollectionViewD
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 
         let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: "UserCardCell",
+            withReuseIdentifier: PublisherCardCell.identifier,
             for: indexPath
-        ) as! UserCardCell
+        ) as! PublisherCardCell
 
         cell.configure(with: likedUsers[indexPath.row])
         return cell
@@ -144,7 +143,7 @@ extension FavoritesViewController: UICollectionViewDataSource, UICollectionViewD
 
         let totalSpacing: CGFloat = 16 + 12 + 16 // left + middle + right
         let width = (collectionView.frame.width - totalSpacing) / 2
-        let height = width * 1.4
+        let height = width * 1.35
         return CGSize(width: width, height: height)
     }
     

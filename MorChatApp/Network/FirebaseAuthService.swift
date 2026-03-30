@@ -7,6 +7,7 @@ protocol FirebaseAuthServiceProtocol {
     func signIn(with verificationCode: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void)
     func signInWithGoogle(idToken: String, accessToken: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void)
     func signInWithApple(idToken: String, rawNonce: String, fullName: String?, completion: @escaping (Result<AuthDataResult, Error>) -> Void)
+    func signInWithEmail(email: String, password: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void)
     func signOut()
 }
 
@@ -74,15 +75,17 @@ class FirebaseAuthService: FirebaseAuthServiceProtocol {
                 return
             }
             if let authResult = authResult {
-                let userModel = UserModel(
-                    uid: authResult.user.uid,
-                    name: authResult.user.displayName,
-                    email: authResult.user.email,
-                    photoURL: authResult.user.photoURL?.absoluteString,
-                    createdAt: Date()
-                )
+                let user = UserModel( uid: authResult.user.uid,
+                                      name: authResult.user.displayName,
+                                      email: authResult.user.email,
+                                      photoURL: authResult.user.photoURL?.absoluteString,
+                                      createdAt: Date(),
+                                      interests: [],
+                                      tagList: [],
+                                      age: 0,
+                                      status: "unknown")
                 
-                FirestoreService.shared.saveUserProfile(user: userModel) { _ in
+                FirestoreService.shared.saveUserProfile(user: user) { _ in
                     UserDefaults.standard.set(true, forKey: "isLogin")
                     completion(.success(authResult))
                 }
@@ -107,13 +110,15 @@ class FirebaseAuthService: FirebaseAuthServiceProtocol {
                 // Bu yüzden eğer elimizde yeni bir isim varsa (fullName) onu kullanıyoruz.
                 let nameToSave = fullName ?? authResult.user.displayName
                 
-                let userModel = UserModel(
-                    uid: authResult.user.uid,
-                    name: nameToSave,
-                    email: authResult.user.email,
-                    photoURL: authResult.user.photoURL?.absoluteString,
-                    createdAt: Date()
-                )
+                let userModel =  UserModel( uid: authResult.user.uid,
+                                            name: authResult.user.displayName,
+                                            email: authResult.user.email,
+                                            photoURL: authResult.user.photoURL?.absoluteString,
+                                            createdAt: Date(),
+                                            interests: [],
+                                            tagList: [],
+                                            age: 0,
+                                            status: "unknown")
                 
                 FirestoreService.shared.saveUserProfile(user: userModel) { _ in
                     UserDefaults.standard.set(true, forKey: "isLogin")
@@ -133,9 +138,24 @@ class FirebaseAuthService: FirebaseAuthServiceProtocol {
             GIDSignIn.sharedInstance.signOut()
             
             UserDefaults.standard.set(false, forKey: "isLogin")
+            UserDefaults.standard.removeObject(forKey: "userType") // Clear user type on sign out
             print("✅ Başarıyla çıkış yapıldı.")
         } catch {
             print("❌ Sign out error: \(error)")
+        }
+    }
+
+    // 6. Email ve Şifre ile Giriş Yapma
+    func signInWithEmail(email: String, password: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void) {
+        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            if let authResult = authResult {
+                UserDefaults.standard.set(true, forKey: "isLogin")
+                completion(.success(authResult))
+            }
         }
     }
 }

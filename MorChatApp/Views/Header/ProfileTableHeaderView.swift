@@ -110,7 +110,6 @@ final class ProfileTableHeaderView: UIView {
     func setProfileImage(_ image: UIImage) {
         profileImageView.image = image
         profileImageView.contentMode = .scaleAspectFill
-        profileImageView.layer.cornerRadius = 0 // Container handles rounding if clipsToBounds is true
         profileImageContainer.clipsToBounds = true
     }
     
@@ -119,42 +118,5 @@ final class ProfileTableHeaderView: UIView {
         profileImageView.kf.setImage(with: url, placeholder: UIImage(systemName: "plus"))
         profileImageView.contentMode = .scaleAspectFill
         profileImageContainer.clipsToBounds = true
-    }
-    
-    func configure(with name: String, tags: [InterestModel]) {
-        nameLabel.text = name
-        interestsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        
-        for tag in tags {
-            let pill = createTagPill(title: tag.name, icon: tag.icon)
-            interestsStack.addArrangedSubview(pill)
-        }
-    }
-    
-    private func createTagPill(title: String, icon: String) -> UIView {
-        let v = UIView()
-        v.backgroundColor = UIColor(white: 1.0, alpha: 0.15)
-        v.layer.cornerRadius = 14
-        
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 6
-        stack.alignment = .center
-        
-        let iv = UIImageView(image: UIImage(systemName: icon))
-        iv.tintColor = .systemPink
-        iv.snp.makeConstraints { $0.size.equalTo(12) }
-        
-        let l = UILabel()
-        l.text = title
-        l.textColor = .white
-        l.font = .systemFont(ofSize: 12, weight: .semibold)
-        
-        stack.addArrangedSubview(iv)
-        stack.addArrangedSubview(l)
-        v.addSubview(stack)
-        stack.snp.makeConstraints { $0.edges.equalToSuperview().inset(UIEdgeInsets(top: 4, left: 12, bottom: 4, right: 12)) }
-        
-        return v
     }
 }

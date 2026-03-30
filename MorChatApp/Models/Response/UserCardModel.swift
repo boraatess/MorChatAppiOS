@@ -15,6 +15,6 @@ struct UserCardModel {
     let status: String?
     let tags: [String]
     
-    let profile: PublisherProfile // 🔥 BU ŞART
-    
+    var profile: PublisherProfile? // Could be nil for watchers
+    var user: UserModel? // Could be nil for publishers
 }

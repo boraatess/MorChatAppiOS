@@ -35,8 +35,8 @@ class HomeViewController: BaseVC {
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
-        cv.register(UserCardCell.self,
-                    forCellWithReuseIdentifier: UserCardCell.identifier)
+        cv.register(PublisherCardCell.self,
+                    forCellWithReuseIdentifier: PublisherCardCell.identifier)
         cv.delegate = self
         cv.dataSource = self
         return cv
@@ -58,6 +58,12 @@ class HomeViewController: BaseVC {
         viewModel.output = self
         viewModel.viewDidLoad()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Refetch data each time screen appears to show updated interests/profile
+        viewModel.viewDidLoad() 
+    }
 }
 
 private extension HomeViewController {
@@ -71,6 +77,7 @@ private extension HomeViewController {
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(44)
         }
+        
         
         collectionView.snp.makeConstraints {
             $0.top.equalTo(tagCollectionView.snp.bottom).offset(8)
@@ -100,9 +107,10 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         }
         
         let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: UserCardCell.identifier,
+            withReuseIdentifier: PublisherCardCell.identifier,
             for: indexPath
-        ) as! UserCardCell
+        ) as! PublisherCardCell
+        
         
         // 🔥 SADECE users kullan
         cell.configure(with: users[indexPath.row])
@@ -125,7 +133,8 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         // 🔥 DOĞRU MODEL
         let selectedUser = users[indexPath.row]
         
-        let detailVC = PublisherDetailViewController(profile: selectedUser.profile)
+        guard let profile = selectedUser.profile else { return }
+        let detailVC = PublisherDetailViewController(profile: profile)
         detailVC.hidesBottomBarWhenPushed = true
         
         navigationController?.pushViewController(detailVC, animated: true)

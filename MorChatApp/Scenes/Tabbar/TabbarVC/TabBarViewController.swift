@@ -81,7 +81,10 @@ class TabBarViewController: UITabBarController {
     
     // MARK: - Setup Tabs
     private func setupTabBar() {
-        let homeVC = BaseNavigationController(rootViewController: HomeViewController())
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        
+        let homeRoot: UIViewController = (userType == "guide") ? GuideHomeViewController() : HomeViewController()
+        let homeVC = BaseNavigationController(rootViewController: homeRoot)
         homeVC.navigationBar.isHidden = true
         homeVC.tabBarItem = UITabBarItem(
             title: "Home",
@@ -97,28 +100,54 @@ class TabBarViewController: UITabBarController {
             selectedImage: UIImage(named: "notifications")?.withRenderingMode(.alwaysTemplate)
         )
         
-        let favsController = BaseNavigationController(rootViewController: FavoritesViewController())
-        favsController.navigationBar.isHidden = true
-        favsController.tabBarItem = UITabBarItem(
-            title: "Favorites",
-            image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
-            selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate)
-        )
+        let profileRoot: UIViewController = ( userType == "guide") ? PublisherProfileVC() : ProfileViewController()
         
-        let profileController = BaseNavigationController(rootViewController: ProfileViewController())
-        profileController.navigationBar.isHidden = true
-        profileController.tabBarItem = UITabBarItem(
+       // let profileVC = BaseNavigationController(rootViewController: profileRoot)
+        
+        
+        let publicationHistory = BaseNavigationController(rootViewController: PublicationHistoryVC())
+        publicationHistory.navigationBar.isHidden = true
+        publicationHistory.tabBarItem = UITabBarItem(title: "History",  image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
+            selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate))
+        
+        
+        let userprofileController = BaseNavigationController(rootViewController: ProfileViewController())
+        userprofileController.navigationBar.isHidden = true
+        userprofileController.tabBarItem = UITabBarItem(
             title: "Profile",
             image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate)
         )
         
-        viewControllers = [
-            homeVC,
-            notifiesController,
-            favsController,
-            profileController
-        ]
+        let publisherProfile = BaseNavigationController(rootViewController: PublisherProfileVC())
+        publisherProfile.navigationBar.isHidden = true
+        publisherProfile.tabBarItem = UITabBarItem(title: "My Account", image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate), selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate))
+        
+      
+        
+        if userType == "guide" {
+            viewControllers = [
+                homeVC,
+                notifiesController,
+                publicationHistory,
+                publisherProfile
+            ]
+        } else {
+            let favsController = BaseNavigationController(rootViewController: FavoritesViewController())
+            favsController.navigationBar.isHidden = true
+            favsController.tabBarItem = UITabBarItem(
+                title: "Favorites",
+                image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
+                selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate)
+            )
+            
+            viewControllers = [
+                homeVC,
+                notifiesController,
+                favsController,
+                userprofileController
+            ]
+        }
     }
 }
 

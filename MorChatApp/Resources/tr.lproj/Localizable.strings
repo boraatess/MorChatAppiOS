@@ -31,7 +31,7 @@
 // MARK: - Guide Login
 "login_guide_subtitle" = "Rehber hesabınıza giriş yapın";
 "login_guide_email" = "E-posta adresiniz";
-"login_guide_code" = "Rehber kodunuz";
+"login_guide_password" = "Şifreniz";
 "login_guide_become" = "Rehber olmak ister misiniz?";
 "login_guide_login_button" = "Giriş Yap";
 
@@ -125,3 +125,8 @@
 "faq_q6" = "Şikayette nasıl bulunabilirim?";
 "faq_a6" = "Profil sayfasındaki şikayet butonunu kullanabilirsiniz.";
 
+
+// MARK: - Guide Home
+"guide_home_welcome" = "Tekrar Hoşgeldin, Rehber!";
+"guide_status_online" = "Çevrimiçi Modu";
+"guide_home_info" = "Aramaları almak için çevrimiçi olduğunuzdan emin olun.";

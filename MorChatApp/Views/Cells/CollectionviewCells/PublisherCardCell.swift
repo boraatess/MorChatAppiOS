@@ -4,45 +4,16 @@ import Kingfisher
 import UIKit
 import SnapKit
 
-
-protocol UserCardCellDelegate: AnyObject {
-    func didTapCallNow(on cell: UserCardCell)
-    func didTapVoiceCall(on cell: UserCardCell)
-}
-
-final class UserCardCell: UICollectionViewCell {
+final class PublisherCardCell: UICollectionViewCell {
     
     // MARK: - UI
-    static let identifier = "UserCardCell"
-    weak var delegate: UserCardCellDelegate?
+    static let identifier = "PublisherCardCell"
 
     private let imageView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFill
         iv.clipsToBounds = true
         return iv
-    }()
-    
-    private let coinView: UIView = {
-        let v = UIView()
-        v.backgroundColor = UIColor.black.withAlphaComponent(0.3)
-        v.layer.cornerRadius = 12
-        return v
-    }()
-    
-    private let coinIcon: UIImageView = {
-        let iv = UIImageView()
-        iv.image = UIImage(systemName: "dollarsign.circle.fill")
-        iv.tintColor = .systemYellow
-        return iv
-    }()
-    
-    private let coinLabel: UILabel = {
-        let l = UILabel()
-        l.text = "5"
-        l.textColor = .white
-        l.font = .systemFont(ofSize: 12, weight: .bold)
-        return l
     }()
     
     private let statusPill: UIView = {
@@ -60,25 +31,6 @@ final class UserCardCell: UICollectionViewCell {
         return l
     }()
     
-    private let blockButton: UIButton = {
-        let b = UIButton(type: .system)
-        var config = UIButton.Configuration.plain()
-        config.image = UIImage(systemName: "nosign")
-        config.title = "Block"
-        config.imagePlacement = .top
-        config.imagePadding = 2
-        config.baseForegroundColor = .red
-        
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var outgoing = incoming
-            outgoing.font = .systemFont(ofSize: 8, weight: .bold)
-            return outgoing
-        }
-        
-        b.configuration = config
-        return b
-    }()
-
     private let gradientView = UIView()
     private let gradientLayer = CAGradientLayer()
     
@@ -97,63 +49,14 @@ final class UserCardCell: UICollectionViewCell {
         return s
     }()
     
-    private let btnStack: UIStackView = {
-        let s = UIStackView()
-        s.axis = .horizontal
-        s.spacing = 8
-        s.distribution = .fillEqually
-        return s
-    }()
-    
-    private let callNowBtn: UIButton = {
-        let b = UIButton(type: .system)
-        b.backgroundColor = .systemPurple
-        b.setTitle("Call Now", for: .normal)
-        b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
-        b.setImage(UIImage(systemName: "video.fill"), for: .normal)
-        b.tintColor = .white
-        b.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
-        b.layer.cornerRadius = 8
-        return b
-    }()
-    
-    private let voiceCallBtn: UIButton = {
-        let b = UIButton(type: .system)
-        b.backgroundColor = .systemPurple
-        b.setTitle("Voice Call", for: .normal)
-        b.setTitleColor(.white, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 11, weight: .bold)
-        b.setImage(UIImage(systemName: "phone.fill"), for: .normal)
-        b.tintColor = .white
-        b.imageEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 8)
-        b.layer.cornerRadius = 8
-        return b
-    }()
-    
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         setupUI()
         setupConstraints()
         setupGradient()
-        setupActions()
     }
     
     required init?(coder: NSCoder) { fatalError() }
-    
-    private func setupActions() {
-        callNowBtn.addTarget(self, action: #selector(didTapCallNow), for: .touchUpInside)
-        voiceCallBtn.addTarget(self, action: #selector(didTapVoiceCall), for: .touchUpInside)
-    }
-    
-    @objc private func didTapCallNow() {
-        delegate?.didTapCallNow(on: self)
-    }
-    
-    @objc private func didTapVoiceCall() {
-        delegate?.didTapVoiceCall(on: self)
-    }
     
     func configure(with model: UserCardModel) {
         nameLabel.text = model.name
@@ -237,20 +140,11 @@ final class UserCardCell: UICollectionViewCell {
         contentView.addSubview(imageView)
         contentView.addSubview(gradientView)
         
-        coinView.addSubview(coinIcon)
-        coinView.addSubview(coinLabel)
-        contentView.addSubview(coinView)
-        
         statusPill.addSubview(statusLabel)
         contentView.addSubview(statusPill)
-        contentView.addSubview(blockButton)
         
         contentView.addSubview(nameLabel)
         contentView.addSubview(tagsStack)
-        
-        btnStack.addArrangedSubview(callNowBtn)
-        btnStack.addArrangedSubview(voiceCallBtn)
-        contentView.addSubview(btnStack)
     }
     
     private func setupConstraints() {
@@ -259,24 +153,6 @@ final class UserCardCell: UICollectionViewCell {
         gradientView.snp.makeConstraints {
             $0.leading.trailing.bottom.equalToSuperview()
             $0.height.equalToSuperview().multipliedBy(0.5)
-        }
-        
-        coinView.snp.makeConstraints {
-            $0.top.leading.equalToSuperview().offset(12)
-            $0.height.equalTo(24)
-            $0.width.greaterThanOrEqualTo(45)
-        }
-        
-        coinIcon.snp.makeConstraints {
-            $0.leading.equalToSuperview().offset(6)
-            $0.centerY.equalToSuperview()
-            $0.size.equalTo(14)
-        }
-        
-        coinLabel.snp.makeConstraints {
-            $0.leading.equalTo(coinIcon.snp.trailing).offset(4)
-            $0.trailing.equalToSuperview().inset(6)
-            $0.centerY.equalToSuperview()
         }
         
         statusPill.snp.makeConstraints {
@@ -288,20 +164,9 @@ final class UserCardCell: UICollectionViewCell {
         
         statusLabel.snp.makeConstraints { $0.center.equalToSuperview() }
         
-        blockButton.snp.makeConstraints {
-            $0.top.equalTo(statusPill.snp.bottom).offset(4)
-            $0.trailing.equalTo(statusPill)
-            $0.width.equalTo(40)
-        }
-        
-        btnStack.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview().inset(8)
-            $0.height.equalTo(28)
-        }
-        
         tagsStack.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(8)
-            $0.bottom.equalTo(btnStack.snp.top).offset(-8)
+            $0.bottom.equalToSuperview().inset(12) // Anchored to bottom instead of btnStack
         }
         
         nameLabel.snp.makeConstraints {
@@ -322,23 +187,5 @@ final class UserCardCell: UICollectionViewCell {
     override func layoutSubviews() {
         super.layoutSubviews()
         gradientLayer.frame = gradientView.bounds
-        applyButtonGradient(callNowBtn)
-        applyButtonGradient(voiceCallBtn)
-    }
-    
-    private func applyButtonGradient(_ button: UIButton) {
-        let name = "btn_grad"
-        button.layer.sublayers?.filter { $0.name == name }.forEach { $0.removeFromSuperlayer() }
-        let grad = CAGradientLayer()
-        grad.name = name
-        grad.colors = [
-            UIColor(red: 0.6, green: 0.3, blue: 0.8, alpha: 1.0).cgColor,
-            UIColor(red: 0.4, green: 0.1, blue: 0.6, alpha: 1.0).cgColor
-        ]
-        grad.startPoint = CGPoint(x: 0, y: 0.5)
-        grad.endPoint = CGPoint(x: 1, y: 0.5)
-        grad.frame = button.bounds
-        grad.cornerRadius = button.layer.cornerRadius
-        button.layer.insertSublayer(grad, at: 0)
     }
 }

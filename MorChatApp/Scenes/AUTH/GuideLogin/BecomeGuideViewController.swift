@@ -289,9 +289,8 @@ final class BecomeGuideViewController: UIViewController {
 }
 
 extension BecomeGuideViewController: SharedTagsCloudViewDelegate {
-  
-    func selectedTag(_ tagName: String, icon: String, color: UIColor) {
-        
+    
+    func selectedTag(_ id: Int, tagName: String, icon: String, color: UIColor) {
         
     }
     

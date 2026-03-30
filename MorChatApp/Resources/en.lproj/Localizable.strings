@@ -31,7 +31,7 @@
 // MARK: - Guide Login
 "login_guide_subtitle" = "Log in to your guide account";
 "login_guide_email" = "Your e-mail address";
-"login_guide_code" = "Guide code";
+"login_guide_password" = "Your password";
 "login_guide_become" = "Do you want to become a guide?";
 "login_guide_login_button" = "Log In";
 
@@ -125,3 +125,8 @@
 "faq_q6" = "How can I make a report?";
 "faq_a6" = "You can use the report button on the profile page.";
 
+
+// MARK: - Guide Home
+"guide_home_welcome" = "Welcome Back, Guide!";
+"guide_status_online" = "Online Mode";
+"guide_home_info" = "Make sure you are online to receive calls.";

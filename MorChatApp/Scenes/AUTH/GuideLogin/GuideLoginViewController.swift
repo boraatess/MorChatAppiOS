@@ -50,7 +50,7 @@ final class GuideLoginViewController: UIViewController {
     
     // TextFields
     private let emailField = GuideTextField(icon: "envelope.fill", placeholder: "login_guide_email".localized)
-    private let codeField = GuideTextField(icon: "key.fill", placeholder: "login_guide_code".localized, isSecure: true)
+    private let passwordField = GuideTextField(icon: "lock.fill", placeholder: "login_guide_password".localized, isSecure: true)
     
     // Checkboxes
     private let contractsCheckbox = CheckboxView(text: "login_contracts".localized)
@@ -133,7 +133,7 @@ final class GuideLoginViewController: UIViewController {
         view.addSubview(subtitleLabel)
         
         view.addSubview(emailField)
-        view.addSubview(codeField)
+        view.addSubview(passwordField)
         
         view.addSubview(contractsCheckbox)
         view.addSubview(gdprCheckbox)
@@ -177,7 +177,7 @@ final class GuideLoginViewController: UIViewController {
             make.height.equalTo(52)
         }
         
-        codeField.snp.makeConstraints { make in
+        passwordField.snp.makeConstraints { make in
             make.top.equalTo(emailField.snp.bottom).offset(12)
             make.leading.trailing.equalToSuperview().inset(24)
             make.height.equalTo(52)
@@ -185,7 +185,7 @@ final class GuideLoginViewController: UIViewController {
         
         // Checkboxes side by side
         contractsCheckbox.snp.makeConstraints { make in
-            make.top.equalTo(codeField.snp.bottom).offset(20)
+            make.top.equalTo(passwordField.snp.bottom).offset(20)
             make.leading.equalToSuperview().offset(24)
         }
         
@@ -247,15 +247,25 @@ final class GuideLoginViewController: UIViewController {
             return
         }
         
-        guard let code = codeField.textField.text, !code.isEmpty else {
-            showAlert(message: "Please enter your code")
+        guard let password = passwordField.textField.text, !password.isEmpty else {
+            showAlert(message: "Please enter your password")
             return
         }
         
         if checkTerms() {
-            let tabbar = TabBarViewController()
-            tabbar.modalPresentationStyle = .overFullScreen
-            self.present(tabbar, animated: true)
+            FirebaseAuthService.shared.signInWithEmail(email: email, password: password) { [weak self] result in
+                switch result {
+                case .success:
+                    UserDefaults.standard.set("guide", forKey: "userType")
+                    DispatchQueue.main.async {
+                        let tabBarVC = TabBarViewController()
+                        tabBarVC.modalPresentationStyle = .fullScreen
+                        self?.present(tabBarVC, animated: true)
+                    }
+                case .failure(let error):
+                    self?.showAlert(message: error.localizedDescription)
+                }
+            }
         } else {
             showAlert(message: "login_error_terms".localized)
         }

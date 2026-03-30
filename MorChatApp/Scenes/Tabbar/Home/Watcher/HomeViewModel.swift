@@ -31,12 +31,9 @@ class HomeViewModel: HomeViewModelInputprotocol {
     
     private let firestoreService: FirestoreServiceProtocol
     
-    let availableTags = [
-        "Spiritual Talks", "Dream", "Mystery", "Books", "Poetry", "Astrology", "Psychology",
-        "Love", "Travel", "Romance", "Martial Arts", "Real Estate", "Health", "Economy",
-        "Technology", "Plumber", "Electrician", "Beauty / Cosmetics", "Child Development", "Music",
-        "Cars", "Food", "Fashion", "Football", "Games", "Fun", "Politics", "History", "Cinema", "Drinks"
-    ]
+    private var availableTags: [String] {
+        return SharedTagsCloudView.categories.map { $0.name }
+    }
     
     private var selectedTag: String?
     

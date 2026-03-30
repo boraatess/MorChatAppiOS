@@ -1,9 +1,11 @@
-import UIKit
+
 import SnapKit
+import UIKit
+
 
 protocol SharedTagsCloudViewDelegate: AnyObject {
     func didToggleTag(_ tag: String, isSelected: Bool)
-    func selectedTag(_ tagName: String, icon: String, color: UIColor)
+    func selectedTag(_ id: Int, tagName: String, icon: String, color: UIColor)
     func didUpdateSelectedCount(_ count: Int)
 }
 
@@ -15,6 +17,7 @@ extension SharedTagsCloudViewDelegate {
 final class SharedTagsCloudView: UIView {
     
     struct TagInfo {
+        let id: Int
         let name: String
         let color: UIColor
         let icon: String?
@@ -22,32 +25,34 @@ final class SharedTagsCloudView: UIView {
     
     weak var delegate: SharedTagsCloudViewDelegate?
     
-    // Default categories used everywhere
-    static let categories: [TagInfo] = [
-        .init(name: "Spiritual Talks", color: .systemTeal, icon: "moon.stars.fill"),
-        .init(name: "Dream", color: .systemPurple, icon: "cloud.fill"),
-        .init(name: "Mystery", color: .darkGray, icon: "questionmark.circle.fill"),
-        .init(name: "Books", color: .systemOrange, icon: "book.fill"),
-        .init(name: "Poetry", color: .systemPink, icon: "pencil"),
-        .init(name: "Astrology", color: .systemIndigo, icon: "stars"),
-        .init(name: "Psychology", color: .systemYellow, icon: "brain.head.profile"),
-        .init(name: "Love", color: .systemRed, icon: "heart.fill"),
-        .init(name: "Travel", color: .orange, icon: "airplane"),
-        .init(name: "Romance", color: .systemPink, icon: "heart.text.square.fill"),
-        .init(name: "Martial Arts", color: .red, icon: "bolt.fill"),
-        .init(name: "Real Estate", color: .brown, icon: "house.fill"),
-        .init(name: "Health", color: .systemGreen, icon: "heart.circle.fill"),
-        .init(name: "Economy", color: .cyan, icon: "chart.bar.fill"),
-        .init(name: "Technology", color: .systemBlue, icon: "cpu"),
-        .init(name: "Plumber", color: .systemBlue, icon: "wrench.fill"),
-        .init(name: "Electrician", color: .systemOrange, icon: "bolt.fill"),
-        .init(name: "Beauty / Cosmetics", color: .systemPink, icon: "sparkles"),
-        .init(name: "Child Development", color: .orange, icon: "face.smiling.fill"),
-        .init(name: "Music", color: .systemBlue, icon: "music.note"),
-        .init(name: "Cars", color: .gray, icon: "car.fill"),
-        .init(name: "Food", color: .systemGreen, icon: "fork.knife"),
-        .init(name: "Fashion", color: .systemPink, icon: "bag.fill"),
-        .init(name: "Football", color: .systemGreen, icon: "figure.soccer")
+    // Static shared categories updated from Firestore
+    static var categories: [TagInfo] = []
+    
+    static var defaultCategories: [TagInfo] = [
+        .init(id: 0, name: "Spiritual Talks", color: .systemTeal, icon: "moon.stars.fill"),
+        .init(id: 1, name: "Dream", color: .systemPurple, icon: "cloud.fill"),
+        .init(id: 2, name: "Mystery", color: .darkGray, icon: "questionmark.circle.fill"),
+        .init(id: 3, name: "Books", color: .systemOrange, icon: "book.fill"),
+        .init(id: 4, name: "Poetry", color: .systemPink, icon: "pencil"),
+        .init(id: 5, name: "Astrology", color: .systemIndigo, icon: "stars"),
+        .init(id: 6, name: "Psychology", color: .systemYellow, icon: "brain.head.profile"),
+        .init(id: 7, name: "Love", color: .systemRed, icon: "heart.fill"),
+        .init(id: 8, name: "Travel", color: .orange, icon: "airplane"),
+        .init(id: 9, name: "Romance", color: .systemPink, icon: "heart.text.square.fill"),
+        .init(id: 10, name: "Martial Arts", color: .red, icon: "bolt.fill"),
+        .init(id: 11, name: "Real Estate", color: .brown, icon: "house.fill"),
+        .init(id: 12, name: "Health", color: .systemGreen, icon: "heart.circle.fill"),
+        .init(id: 13, name: "Economy", color: .cyan, icon: "chart.bar.fill"),
+        .init(id: 14, name: "Technology", color: .systemBlue, icon: "cpu"),
+        .init(id: 15, name: "Plumber", color: .systemBlue, icon: "wrench.fill"),
+        .init(id: 16, name: "Electrician", color: .systemOrange, icon: "bolt.fill"),
+        .init(id: 17, name: "Beauty / Cosmetics", color: .systemPink, icon: "sparkles"),
+        .init(id: 18, name: "Child Development", color: .orange, icon: "face.smiling.fill"),
+        .init(id: 19, name: "Music", color: .systemBlue, icon: "music.note"),
+        .init(id: 20, name: "Cars", color: .gray, icon: "car.fill"),
+        .init(id: 21, name: "Food", color: .systemGreen, icon: "fork.knife"),
+        .init(id: 22, name: "Fashion", color: .systemPink, icon: "bag.fill"),
+        .init(id: 23, name: "Football", color: .systemGreen, icon: "figure.soccer")
     ]
     
     private var selectedTags = Set<String>()
@@ -58,6 +63,10 @@ final class SharedTagsCloudView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupTags()
+    }
+    
+    func configure(with categories: [TagInfo]) {
+        
     }
     
     required init?(coder: NSCoder) { fatalError() }
@@ -71,6 +80,11 @@ final class SharedTagsCloudView: UIView {
         return Array(selectedTags)
     }
     
+    func refreshTags() {
+        setupTags()
+    }
+    
+    
     private func updateButtonSelection() {
         for btn in buttons {
             let title = btn.accessibilityLabel ?? ""
@@ -82,14 +96,17 @@ final class SharedTagsCloudView: UIView {
     }
     
     private func setupTags() {
+        subviews.forEach { $0.removeFromSuperview() }
+        buttons.removeAll()
+        
         var currentX: CGFloat = 0
         var currentY: CGFloat = 0
         let spacingX: CGFloat = 6
         let spacingY: CGFloat = 8
         let tagHeight: CGFloat = 34
         
-        // Fix for UIScreen.main warning
-        let screenWidth = (UIApplication.shared.connectedScenes.first as? UIWindowScene)?.screen.bounds.width ?? 375
+        let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+        let screenWidth = scene?.screen.bounds.width ?? 375
         let maxWidth = screenWidth - 32
         
         var rows = [[UIView]]()
@@ -136,7 +153,7 @@ final class SharedTagsCloudView: UIView {
             currentY += tagHeight + spacingY
         }
         
-        self.snp.makeConstraints { make in
+        self.snp.remakeConstraints { make in
             make.height.equalTo(currentY)
         }
     }
@@ -199,11 +216,8 @@ final class SharedTagsCloudView: UIView {
         delegate?.didToggleTag(title, isSelected: !isSelected)
         delegate?.didUpdateSelectedCount(selectedTags.count)
         
-        // Find info for the selected tag
-        let tagInfo = SharedTagsCloudView.categories.first(where: { $0.name == title })
-        let iconName = tagInfo?.icon ?? ""
-        let color = tagInfo?.color ?? .gray
-        delegate?.selectedTag(title, icon: iconName, color: color)
+        if let tagInfo = SharedTagsCloudView.categories.first(where: { $0.name == title }) {
+            delegate?.selectedTag(tagInfo.id, tagName: title, icon: tagInfo.icon ?? "", color: tagInfo.color)
+        }
     }
-    
 }

@@ -4,7 +4,6 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-// Global ayarlar (Bölge vb. gerekirse buraya eklenir)
 setGlobalOptions({ maxInstances: 10 });
 
 /**
@@ -22,24 +21,43 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
     console.log(`🚀 Yeni arama (v2): ${callerId} -> ${receiverId}`);
 
     try {
-        // 1. Alıcının msgToken'ını bul (UserWatcher üzerinden)
-        const receiverDoc = await admin.firestore().collection("UserWatcher").doc(receiverId).get();
-        if (!receiverDoc.exists) {
-            console.log("⚠️ Alıcı dökümanı bulunamadı!");
-            return null;
+        // --- 1. Alıcının msgToken'ını Bul ---
+        let token = null;
+        let receiverName = "Alıcı";
+
+        // Önce yayıncılarda (PublisherProfile) ara
+        let receiverDoc = await admin.firestore().collection("PublisherProfile").doc(receiverId).get();
+        if (receiverDoc.exists) {
+            token = receiverDoc.data().msgToken;
+            receiverName = receiverDoc.data().name || receiverName;
+        } else {
+            // Yayıncılarda yoksa normal kullanıcılarda (UserWatcher) ara
+            receiverDoc = await admin.firestore().collection("UserWatcher").doc(receiverId).get();
+            if (receiverDoc.exists) {
+                token = receiverDoc.data().msgToken;
+                receiverName = receiverDoc.data().name || receiverName;
+            }
         }
-        
-        const token = receiverDoc.data().msgToken;
+
         if (!token) {
-            console.log("⚠️ Alıcının FCM Jetonu (msgToken) yok!");
+            console.log(`⚠️ Alıcı (${receiverId}) bulunamadı veya msgToken'ı yok!`);
             return null;
         }
 
-        // 2. Arayan kişinin adını bul (UserWatcher üzerinden)
-        const callerDoc = await admin.firestore().collection("UserWatcher").doc(callerId).get();
-        const callerName = callerDoc.exists ? (callerDoc.data().name || "Bir kullanıcı") : "Bir kullanıcı";
+        // --- 2. Arayanın Adını Bul (Bildirim Başlığı İçin) ---
+        let callerName = "Bir kullanıcı";
+        // Arayan hem yayıncı hem normal kullanıcı olabilir
+        let callerDoc = await admin.firestore().collection("UserWatcher").doc(callerId).get();
+        if (callerDoc.exists) {
+            callerName = callerDoc.data().name || callerName;
+        } else {
+            callerDoc = await admin.firestore().collection("PublisherProfile").doc(callerId).get();
+            if (callerDoc.exists) {
+                callerName = callerDoc.data().name || callerName;
+            }
+        }
 
-        // 3. Mesajı gönder
+        // --- 3. Bildirimi Fırlat ---
         const message = {
             notification: {
                 title: isVideo ? "Görüntülü Arama" : "Sesli Arama",
@@ -62,38 +80,9 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
         };
 
         await admin.messaging().send(message);
-        console.log("✅ Bildirim gönderildi");
+        console.log(`✅ Bildirim gönderildi: ${callerName} -> ${receiverName}`);
     } catch (error) {
-        console.error("❌ Hata:", error);
-    }
-    return null;
-});
-
-/**
- * Genel bildirimler için v2 tetikleyici
- */
-exports.onwatchernotification = onDocumentCreated("NotificationListWatcher/{notifId}", async (event) => {
-    const snapshot = event.data;
-    if (!snapshot) return null;
-    
-    const data = snapshot.data();
-    const receiverToken = data.receiverToken;
-
-    if (!receiverToken) return null;
-
-    const message = {
-        notification: {
-            title: data.title || "Yeni Bildirim",
-            body: data.message || "Bir güncellemeniz var.",
-        },
-        token: receiverToken,
-    };
-
-    try {
-        await admin.messaging().send(message);
-        console.log("✅ Genel bildirim gönderildi");
-    } catch (error) {
-        console.log("❌ Hata:", error);
+        console.error("❌ Bildirim hatası:", error);
     }
     return null;
 });

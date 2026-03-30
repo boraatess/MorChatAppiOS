@@ -14,5 +14,6 @@ struct PublisherProfile {
     let point: Int?
     let profilePic: String?
     let status: String?
+    let interests: [String]?
     let tagList: [Int]?
 }

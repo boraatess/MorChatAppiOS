@@ -20,7 +20,6 @@ final class ProfileViewController: BaseVC {
         }
     }
 
-    
     private var currentUser: UserModel?
 
     private lazy var tableView: UITableView = {
@@ -76,7 +75,7 @@ final class ProfileViewController: BaseVC {
         if let savedNames = UserDefaults.standard.stringArray(forKey: "user_selected_interests") {
             let restored = savedNames.compactMap { name -> InterestModel? in
                 if let category = SharedTagsCloudView.categories.first(where: { $0.name == name }) {
-                    return InterestModel(name: category.name, icon: category.icon ?? "", color: category.color)
+                    return InterestModel(id: category.id, name: category.name, icon: category.icon ?? "", color: category.color)
                 }
                 return nil
             }
@@ -95,6 +94,18 @@ final class ProfileViewController: BaseVC {
             switch result {
             case .success(let user):
                 self.currentUser = user
+                
+                // Load remote interests into local state
+                if let remoteInterests = user.interests, !remoteInterests.isEmpty {
+                    let restored = remoteInterests.compactMap { name -> InterestModel? in
+                        if let category = SharedTagsCloudView.categories.first(where: { $0.name == name }) {
+                            return InterestModel(id: category.id, name: category.name, icon: category.icon ?? "", color: category.color)
+                        }
+                        return nil
+                    }
+                    self.selectedInterests = restored
+                }
+                
                 self.updateHeader()
                 self.tableView.reloadData()
             case .failure(let error):
@@ -348,9 +359,37 @@ extension ProfileViewController: InterestsSelectionDelegate {
     func didUpdateInterests(_ tags: [InterestModel]) {
         self.selectedInterests = tags
         if let header = tableView.tableHeaderView as? ProfileTableHeaderView {
-            header.configure(with: "", tags: selectedInterests)
+            
+            // header.configure(with: "", tags: selectedInterests)
+            
+            
         }
         tableView.reloadData()
+        
+        // Save to Firestore so filtering works for Guides (support both Int indices and String names)
+        if var user = currentUser {
+            let tagNames = tags.map { $0.name }
+            let tagIndices = tags.compactMap { interest -> Int? in
+                SharedTagsCloudView.categories.firstIndex(where: { $0.name == interest.name })
+            }
+            
+            let userModel = UserModel(
+                uid: user.uid,
+                name: user.name,
+                email: user.email,
+                photoURL: user.photoURL,
+                createdAt: user.createdAt,
+                interests: tagNames,
+                tagList: tagIndices,
+                age: user.age,
+                status: user.status
+            )
+            FirestoreService.shared.saveUserProfile(user: userModel) { error in
+                if let error = error {
+                    print("Error saving interests to Firestore: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 

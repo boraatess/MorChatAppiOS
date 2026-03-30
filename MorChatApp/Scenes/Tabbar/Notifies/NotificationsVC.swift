@@ -59,6 +59,8 @@ final class NotificationsVC: BaseVC {
         super.viewDidAppear(animated)
         
         navigationController?.navigationBar.isHidden = true
+        updateUI()
+        
     }
     
     // MARK: - Setup
@@ -95,7 +97,6 @@ final class NotificationsVC: BaseVC {
     }
     
     // MARK: - UI State Update
-    
     private func updateUI() {
         let isEmpty = notifications.isEmpty
         
@@ -116,6 +117,12 @@ extension NotificationsVC: NotifiesViewModelOutputProtocol {
     func didFail(with error: String) {
         print("Hata: \(error)")
         self.updateUI()
+    }
+    
+    func didSelectCallRoom(profile: PublisherProfile, isVideo: Bool, callId: String) {
+        let callVC = CallViewController(profile: profile, isVideoCall: isVideo, callId: callId)
+        callVC.modalPresentationStyle = .fullScreen
+        self.present(callVC, animated: true)
     }
 }
 
@@ -199,6 +206,10 @@ final class NotificationCell: UICollectionViewCell {
 
 // MARK: - CollectionView Setup
 extension NotificationsVC: UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        viewModel.selectNotification(at: indexPath.row)
+    }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         notifications.count

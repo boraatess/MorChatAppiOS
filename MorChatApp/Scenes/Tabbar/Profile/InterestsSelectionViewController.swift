@@ -2,9 +2,11 @@ import UIKit
 import SnapKit
 
 struct InterestModel {
+    let id: Int
     let name: String
     let icon: String
     let color: UIColor
+    
 }
 
 protocol InterestsSelectionDelegate: AnyObject {
@@ -69,11 +71,35 @@ final class InterestsSelectionViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         setupUI()
         setupConstraints()
         setupActions()
-        let names = selectedInterests.map { $0.name }
-        tagsCloudView.setSelected(names)
+        fetchTags()
+        
+    }
+    
+    private func fetchTags() {
+        FirestoreService.shared.fetchPublisherTags { [weak self] result in
+            guard let self = self else { return }
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let tags):
+                    let tagInfos = tags.map { tag -> SharedTagsCloudView.TagInfo in
+                        // Map Firestore tags to UI-specific TagInfo
+                        // We can assign default colors/icons because Firestore doesn't provide them yet
+                        let defaultIcon = SharedTagsCloudView.defaultCategories.first(where: { $0.name == tag.name })?.icon ?? "number"
+                        let defaultColor = SharedTagsCloudView.defaultCategories.first(where: { $0.name == tag.name })?.color ?? .systemIndigo
+                        return .init(id: tag.id, name: tag.name, color: defaultColor, icon: defaultIcon)
+                    }
+                    self.tagsCloudView.configure(with: tagInfos)
+                    let names = self.selectedInterests.map { $0.name }
+                    self.tagsCloudView.setSelected(names)
+                case .failure(let error):
+                    print("Error fetching tags: \(error)")
+                }
+            }
+        }
     }
     
     private func setupUI() {
@@ -133,12 +159,33 @@ final class InterestsSelectionViewController: UIViewController {
 }
 
 extension InterestsSelectionViewController: SharedTagsCloudViewDelegate {
-    func selectedTag(_ tagName: String, icon: String, color: UIColor) {
+    
+    func selectedTag(_ id: Int, tagName: String, icon: String, color: UIColor) {
+        
         if let index = selectedInterests.firstIndex(where: { $0.name == tagName }) {
             selectedInterests.remove(at: index)
         } else {
-            selectedInterests.append(InterestModel(name: tagName, icon: icon, color: color))
+            if selectedInterests.count >= 5 {
+                showLimitAlert()
+                // Refresh cloud check state because the tag was visually toggled before delegate call usually
+                tagsCloudView.setSelected(selectedInterests.map { $0.name })
+                return
+            }
+            
+            selectedInterests.append(InterestModel(id: id, name: tagName, icon: icon, color: color))
+            
         }
+        
+    }
+    
+    func selectedTag(_ tagName: String, icon: String, color: UIColor) {
+       
+    }
+    
+    private func showLimitAlert() {
+        let alert = UIAlertController(title: "Selection Limit", message: "You can select up to 5 interests.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 }
 

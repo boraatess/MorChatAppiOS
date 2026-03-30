@@ -24,11 +24,11 @@ class LoginViewModel: LoginViewModelInputprotocol {
         
     }
     
-    
     func loginWithGoogle(idToken: String, accessToken: String) {
         authService.signInWithGoogle(idToken: idToken, accessToken: accessToken) { [weak self] result in
             switch result {
             case .success:
+                UserDefaults.standard.set("user", forKey: "userType")
                 self?.output?.loginSuccess()
             case .failure(let error):
                 self?.output?.showAlert(message: error.localizedDescription)
@@ -40,6 +40,7 @@ class LoginViewModel: LoginViewModelInputprotocol {
         authService.signInWithApple(idToken: idToken, rawNonce: rawNonce, fullName: fullName) { [weak self] result in
             switch result {
             case .success:
+                UserDefaults.standard.set("user", forKey: "userType")
                 self?.output?.loginSuccess()
             case .failure(let error):
                 self?.output?.showAlert(message: error.localizedDescription)

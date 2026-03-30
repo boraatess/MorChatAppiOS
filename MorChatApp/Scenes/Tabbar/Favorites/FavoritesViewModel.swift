@@ -41,6 +41,7 @@ final class FavoritesViewModel: FavoritesViewModelInputProtocol {
                     self?.likedUsers = profiles.compactMap { profile in
 
                         // Convert tagList [Int] indices to tag name strings safely
+                        /*
                         let tagNames: [String]
                         if let tagList = profile.tagList {
                             tagNames = tagList.compactMap { index in
@@ -50,7 +51,9 @@ final class FavoritesViewModel: FavoritesViewModelInputProtocol {
                         } else {
                             tagNames = []
                         }
-                        return UserCardModel(name: profile.name ?? "", age: profile.age, imageURL: profile.profilePic, status: profile.status, tags: tagNames, profile: profile)
+                        */
+                        
+                        return UserCardModel(name: profile.name ?? "", age: profile.age, imageURL: profile.profilePic, status: profile.status, tags: profile.interests ?? [], profile: profile)
                     }
 
                     if let users = self?.likedUsers {
