@@ -255,7 +255,13 @@ class FirestoreService: FirestoreServiceProtocol {
     
     func updateFCMToken(token: String) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        // Update UserWatcher (for regular users)
         db.collection("UserWatcher").document(uid).setData(["msgToken": token], merge: true)
+        
+        // Update PublisherProfile (for guides/publishers)
+        // Note: It's safe to call merge:true on both, as we only update the document if it exists or create/update the field.
+        db.collection("PublisherProfile").document(uid).setData(["msgToken": token], merge: true)
     }
     
     func fetchUserProfile(uid: String, completion: @escaping (Result<UserModel, Error>) -> Void) {

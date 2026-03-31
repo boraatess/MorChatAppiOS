@@ -16,6 +16,8 @@ final class WebRTCClient: NSObject {
     // Tracks
     var localVideoTrack: RTCVideoTrack?
     private var localAudioTrack: RTCAudioTrack?
+    private var localVideoSource: RTCVideoSource?
+    private var localAudioSource: RTCAudioSource?
     private var videoCapturer: RTCCameraVideoCapturer?
     
     // Constraints
@@ -51,15 +53,22 @@ final class WebRTCClient: NSObject {
         // STUN server ayarı - Gerçek sunucu IP'mizi bulmamızı sağlar
         config.iceServers = [RTCIceServer(urlStrings: defaultIceServers)]
         
-        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: ["DtlsSrtpKeyAgreement": kRTCMediaConstraintsValueTrue])
-        
+        // Bazı sürümlerde constraints nil kabul etmez, boş bir nesne verelim
+        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         peerConnection = factory.peerConnection(with: config, constraints: constraints, delegate: self)
         
+        // Audio Track ekleme
         if let audioTrack = self.localAudioTrack {
             peerConnection?.add(audioTrack, streamIds: ["stream0"])
         }
+        
+        // Video Track için Transceiver kullanımı (Unified Plan için önerilen)
         if let videoTrack = self.localVideoTrack {
-            peerConnection?.add(videoTrack, streamIds: ["stream0"])
+            let transceiverInit = RTCRtpTransceiverInit()
+            transceiverInit.streamIds = ["stream0"]
+            // Güçlendirilmiş: Hem gönderelim hem alalım (.sendRecv kullanılır)
+            transceiverInit.direction = .sendRecv
+            peerConnection?.addTransceiver(with: videoTrack, init: transceiverInit)
         }
     }
     
@@ -78,23 +87,33 @@ final class WebRTCClient: NSObject {
         let audioConstrains = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         let audioSource = factory.audioSource(with: audioConstrains)
         let audioTrack = factory.audioTrack(with: audioSource, trackId: "audio0")
+        self.localAudioSource = audioSource
         self.localAudioTrack = audioTrack
         
         // Video Track ekleme (Ön Kamera)
         let videoSource = factory.videoSource()
+        self.localVideoSource = videoSource
+        
         #if targetEnvironment(simulator)
         // Simulator kamera desteklemez
         print("Kamera simülatörde çalışmaz.")
         #else
-        let cameraDevice = RTCCameraVideoCapturer.captureDevices().first { $0.position == .front }
+        let cameraDevice = RTCCameraVideoCapturer.captureDevices().first { $0.position == .front } ?? RTCCameraVideoCapturer.captureDevices().first
         if let device = cameraDevice,
            let format = RTCCameraVideoCapturer.supportedFormats(for: device).max(by: {
-               CMVideoFormatDescriptionGetDimensions($0.formatDescription).width < CMVideoFormatDescriptionGetDimensions($1.formatDescription).width
-           }),
-           let fps = format.videoSupportedFrameRateRanges.max(by: { return $0.maxFrameRate < $1.maxFrameRate }) {
+               let d1 = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
+               let d2 = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
+               return (d1.width * d1.height) < (d2.width * d2.height)
+           }) {
             
             self.videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-            self.videoCapturer?.startCapture(with: device, format: format, fps: Int(fps.maxFrameRate))
+            
+            // FPS listesinden 30'a en yakın olanı veya 30'dan küçük en büyük olanı seçelim
+            let fpsRanges = format.videoSupportedFrameRateRanges
+            let targetFps = 30.0
+            let fps = fpsRanges.contains(where: { $0.maxFrameRate >= targetFps }) ? targetFps : (fpsRanges.max(by: { $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? targetFps)
+            
+            self.videoCapturer?.startCapture(with: device, format: format, fps: Int(fps))
         }
         #endif
         
@@ -103,6 +122,7 @@ final class WebRTCClient: NSObject {
     }
     
     func offer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
+        // 'nil' kabul etmiyorsa boş veya tanımlı constraints kullanılır
         peerConnection?.offer(for: mediaConstraints) { (sdp, _) in
             guard let sdp = sdp else { return }
             self.peerConnection?.setLocalDescription(sdp, completionHandler: { (_) in
@@ -139,17 +159,21 @@ final class WebRTCClient: NSObject {
         guard let capturer = self.videoCapturer else { return }
         let devices = RTCCameraVideoCapturer.captureDevices()
         
-        guard let currentDevice = (capturer.captureSession.inputs.first as? AVCaptureDeviceInput)?.device else { return }
-        let newPosition: AVCaptureDevice.Position = currentDevice.position == .front ? .back : .front
+        // Mevcut pozisyonu bulamıyorsa front kabul et
+        let currentPosition = (capturer.captureSession.inputs.first as? AVCaptureDeviceInput)?.device.position ?? .front
+        let newPosition: AVCaptureDevice.Position = currentPosition == .front ? .back : .front
         
         guard let newDevice = devices.first(where: { $0.position == newPosition }) else { return }
         
         let formats = RTCCameraVideoCapturer.supportedFormats(for: newDevice)
         guard let format = formats.max(by: {
-            CMVideoFormatDescriptionGetDimensions($0.formatDescription).width < CMVideoFormatDescriptionGetDimensions($1.formatDescription).width
+            let d1 = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
+            let d2 = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
+            return (d1.width * d1.height) < (d2.width * d2.height)
         }) else { return }
         
-        let fps = format.videoSupportedFrameRateRanges.max(by: { return $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? 30
+        let fpsRanges = format.videoSupportedFrameRateRanges
+        let fps = fpsRanges.contains(where: { $0.maxFrameRate >= 30 }) ? 30 : (fpsRanges.max(by: { $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? 30)
         
         capturer.stopCapture {
             capturer.startCapture(with: newDevice, format: format, fps: Int(fps))
@@ -163,7 +187,14 @@ extension WebRTCClient: RTCPeerConnectionDelegate {
     
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
         if let videoTrack = stream.videoTracks.first {
-            print("Uzak baglanti kuruldu, video geldi!")
+            print("Remote video stream received!")
+            self.delegate?.webRTCClient(self, didReceiveRemoteVideoTrack: videoTrack)
+        }
+    }
+    
+    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd receiver: RTCRtpReceiver, streams: [RTCMediaStream]) {
+        if let videoTrack = receiver.track as? RTCVideoTrack {
+            print("Remote video track received via receiver!")
             self.delegate?.webRTCClient(self, didReceiveRemoteVideoTrack: videoTrack)
         }
     }

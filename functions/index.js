@@ -69,12 +69,27 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
                 click_action: "CALL_ACTION"
             },
             token: token,
+            // iOS için kritik ayarlar:
             apns: {
+                headers: {
+                    "apns-priority": "10",      // Yüksek öncelik (Kilitli ekranı uyandırır)
+                    "apns-push-type": "alert"   // Bildirim tipi
+                },
                 payload: {
                     aps: {
                         sound: "default",
-                        badge: 1
+                        badge: 1,
+                        "content-available": 1,   // Arka planda uyandırmayı tetikler
+                        "mutable-content": 1      // Gerekirse zengin içerik modu
                     }
+                }
+            },
+            // Android için kritik ayarlar:
+            android: {
+                priority: "high",
+                notification: {
+                    sound: "default",
+                    priority: "high"
                 }
             }
         };
