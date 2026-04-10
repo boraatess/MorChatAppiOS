@@ -4,6 +4,7 @@ import FirebaseAuth
 
 protocol FirestoreServiceProtocol {
     func fetchPublisherProfiles(completion: @escaping (Result<[PublisherProfile], Error>) -> Void)
+    func listenPublisherProfiles(completion: @escaping (Result<[PublisherProfile], Error>) -> Void) -> ListenerRegistration?
     func fetchPublisherProfile(publisherId: String, completion: @escaping (Result<PublisherProfile, Error>) -> Void)
    //  func fetchNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void)
     func fetchLikedPublishers(completion: @escaping (Result<[PublisherProfile], Error>) -> Void)
@@ -13,7 +14,9 @@ protocol FirestoreServiceProtocol {
     func fetchWatchers(completion: @escaping (Result<[UserModel], Error>) -> Void)
     func updateFCMToken(token: String)
     func fetchWatcherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void)
+    func listenWatcherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) -> ListenerRegistration?
     func fetchPublisherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void)
+    func listenPublisherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) -> ListenerRegistration?
     func fetchPublisherTags(completion: @escaping (Result<[TagModel], Error>) -> Void)
 }
 
@@ -35,47 +38,65 @@ class FirestoreService: FirestoreServiceProtocol {
                 return
             }
             
-            var profiles = [PublisherProfile]()
-            for document in documents {
-                let data = document.data()
-                
-                let id = document.documentID
-                let about = data["about"] as? String
-                let age = data["age"] as? Int
-                let email = data["email"] as? String
-                let language = data["language"] as? String
-                let lastSeenTimestamp = data["last_seen"] as? Timestamp
-                let last_seen = lastSeenTimestamp?.dateValue()
-                let msgToken = data["msgToken"] as? String
-                let name = data["name"] as? String
-                let phoneNumber = data["phoneNumber"] as? String
-                let point = data["point"] as? Int
-                let profilePic = data["profilePic"] as? String
-                let status = data["status"] as? String
-                let tagList = data["tagList"] as? [Int]
-                let interests = data["interests"] as? [String] ?? []
-                
-                let profile = PublisherProfile(
-                    id: id,
-                    about: about,
-                    age: age,
-                    email: email,
-                    language: language,
-                    last_seen: last_seen,
-                    msgToken: msgToken,
-                    name: name,
-                    phoneNumber: phoneNumber,
-                    point: point,
-                    profilePic: profilePic,
-                    status: status,
-                    interests: interests,
-                    tagList: tagList
-                )
-                profiles.append(profile)
-            }
-            
+            let profiles = documents.compactMap { self.parseProfile(from: $0) }
             completion(.success(profiles))
         }
+    }
+    
+    // 🔥 ANLIK DİNLEME: Veriler değiştikçe tetiklenir
+    func listenPublisherProfiles(completion: @escaping (Result<[PublisherProfile], Error>) -> Void) -> ListenerRegistration? {
+        return db.collection("PublisherProfile").addSnapshotListener { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                completion(.success([]))
+                return
+            }
+            
+            let profiles = documents.compactMap { self.parseProfile(from: $0) }
+            completion(.success(profiles))
+        }
+    }
+
+    // Ortak Parser Metodu
+    private func parseProfile(from document: DocumentSnapshot) -> PublisherProfile? {
+        guard let data = document.data() else { return nil }
+        
+        let id = document.documentID
+        let about = data["about"] as? String
+        let age = data["age"] as? Int
+        let email = data["email"] as? String
+        let language = data["language"] as? String
+        let lastSeenTimestamp = data["last_seen"] as? Timestamp
+        let last_seen = lastSeenTimestamp?.dateValue()
+        let msgToken = data["msgToken"] as? String
+        let name = data["name"] as? String
+        let phoneNumber = data["phoneNumber"] as? String
+        let point = data["point"] as? Int
+        let profilePic = data["profilePic"] as? String
+        let status = data["status"] as? String
+        let tagList = data["tagList"] as? [Int]
+        let interests = data["interests"] as? [String] ?? []
+        
+        return PublisherProfile(
+            id: id,
+            about: about,
+            age: age,
+            email: email,
+            language: language,
+            last_seen: last_seen,
+            msgToken: msgToken,
+            name: name,
+            phoneNumber: phoneNumber,
+            point: point,
+            profilePic: profilePic,
+            status: status,
+            interests: interests,
+            tagList: tagList
+        )
     }
 
     func fetchPublisherProfile(publisherId: String, completion: @escaping (Result<PublisherProfile, Error>) -> Void) {
@@ -262,6 +283,7 @@ class FirestoreService: FirestoreServiceProtocol {
         // Update PublisherProfile (for guides/publishers)
         // Note: It's safe to call merge:true on both, as we only update the document if it exists or create/update the field.
         db.collection("PublisherProfile").document(uid).setData(["msgToken": token], merge: true)
+        
     }
     
     func fetchUserProfile(uid: String, completion: @escaping (Result<UserModel, Error>) -> Void) {
@@ -407,15 +429,45 @@ class FirestoreService: FirestoreServiceProtocol {
         }
     }
     
+    // 🔥 ANLIK DİNLEME: Watcher Bildirimleri (Sadece bana gelenler)
+    func listenWatcherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) -> ListenerRegistration? {
+        guard let uid = Auth.auth().currentUser?.uid else { return nil }
+        return db.collection("NotificationListWatcher")
+            .whereField("watcherId", isEqualTo: uid)
+            .addSnapshotListener { snapshot, error in
+                self.mapNotifications(snapshot: snapshot, error: error, completion: completion)
+            }
+    }
+    
+    // 🔥 ANLIK DİNLEME: Publisher Bildirimleri (Sadece bana gelenler)
+    func listenPublisherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) -> ListenerRegistration? {
+        guard let uid = Auth.auth().currentUser?.uid else { return nil }
+        return db.collection("NotificationListPublisher")
+            .whereField("publisherId", isEqualTo: uid)
+            .addSnapshotListener { snapshot, error in
+                self.mapNotifications(snapshot: snapshot, error: error, completion: completion)
+            }
+    }
+    
     private func mapNotifications(snapshot: QuerySnapshot?, error: Error?, completion: @escaping (Result<[NotificationModel], Error>) -> Void) {
         if let error = error {
             completion(.failure(error))
             return
         }
         
-        let notifications = snapshot?.documents.compactMap { doc -> NotificationModel? in
+        let docs = snapshot?.documents ?? []
+        print("📡 Firestore: \(docs.count) adet döküman bulundu.")
+
+        let notifications = docs.compactMap { doc -> NotificationModel? in
             let data = doc.data()
             let id = doc.documentID
+            
+            let pId = data["publisherId"] as? String
+            let wId = data["watcherId"] as? String
+            
+            // Eğer liste boşsa buraları kontrol edeceğiz:
+            print("📄 DocID: \(id) | pId: \(pId ?? "nil") | wId: \(wId ?? "nil") | name: \(data["name"] ?? "nil")")
+            
             let callId = data["callId"] as? String
             let image = data["image"] as? String
             let isVoiceOnly = data["isVoiceOnly"] as? Bool

@@ -1,11 +1,6 @@
-//
-//  NotifiesViewModel.swift
-//  MorChatApp
-//
-//  Created by bora ateş on 12.02.2026.
-//
-
 import Foundation
+import FirebaseFirestore
+import FirebaseAuth
 
 protocol NotifiesViewModelInputProtocol: AnyObject {
     func viewDidLoad()
@@ -22,14 +17,19 @@ final class NotifiesViewModel: NotifiesViewModelInputProtocol {
     
     weak var output: NotifiesViewModelOutputProtocol?
     private let firestoreService: FirestoreServiceProtocol
+    private var notifyListener: ListenerRegistration?
     var notifications: [NotificationModel] = []
     
     init(firestoreService: FirestoreServiceProtocol = FirestoreService.shared) {
         self.firestoreService = firestoreService
     }
     
+    deinit {
+        notifyListener?.remove()
+    }
+    
     func viewDidLoad() {
-        fetchNotifications()
+        startListeningNotifications()
     }
     
     func selectNotification(at index: Int) {
@@ -60,32 +60,46 @@ final class NotifiesViewModel: NotifiesViewModelInputProtocol {
                 tagList: []
             )
             
+            print("👉 Notifications: Bildirim seçildi. Hedef Kişi ID: \(otherPersonId ?? "nil"), Arama ID: \(callId)")
+            
             output?.didSelectCallRoom(profile: tempProfile, isVideo: !(notification.isVoiceOnly ?? false), callId: callId)
         }
     }
     
-    private func fetchNotifications() {
+    private func startListeningNotifications() {
         let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        let currentUid = (FirebaseAuth.Auth.auth().currentUser?.uid) ?? "Giriş Yapılmamış"
         
-        // Update handling logic
+        print("🔍 Notifications: Dinleme başlatılıyor...")
+        print("🔍 Notifications: Kullanıcı ID: \(currentUid)")
+        print("🔍 Notifications: Kullanıcı Tipi (userType): \(userType)")
+        
+        notifyListener?.remove()
+        
         let completion: (Result<[NotificationModel], Error>) -> Void = { [weak self] result in
             DispatchQueue.main.async {
                 switch result {
                 case .success(let notifs):
+                    print("✅ Notifications: \(notifs.count) adet bildirim başarıyla işlendi.")
                     let sorted = notifs.sorted(by: { ($0.timestamp ?? Date.distantPast) > ($1.timestamp ?? Date.distantPast) })
                     self?.notifications = sorted
                     self?.output?.didFetchNotifications(with: sorted)
                     
                 case .failure(let error):
+                    print("❌ Notifications: Hata oluştu: \(error.localizedDescription)")
                     self?.output?.didFail(with: error.localizedDescription)
                 }
             }
         }
         
         if userType == "guide" {
-            firestoreService.fetchPublisherNotifications(completion: completion)
+            print("🚀 Notifications: 'NotificationListPublisher' koleksiyonu dinleniyor...")
+            notifyListener = firestoreService.listenPublisherNotifications(completion: completion)
         } else {
-            firestoreService.fetchWatcherNotifications(completion: completion)
+            print("🚀 Notifications: 'NotificationListWatcher' koleksiyonu dinleniyor...")
+            notifyListener = firestoreService.listenWatcherNotifications(completion: completion)
         }
     }
+    
+    
 }

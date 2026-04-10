@@ -25,7 +25,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
                 
         FirebaseApp.configure()
+        
+        // --- KEYBOARD MANAGER SETUP ---
         IQKeyboardManager.shared.isEnabled = true
+        IQKeyboardManager.shared.enableAutoToolbar = true // Toolbar (Done butonu) aktif
+        IQKeyboardManager.shared.resignOnTouchOutside = true // Dışarı basınca kapat
+        // IQKeyboardManager.shared.toolbarConfiguration.doneBarButtonConfiguration?.title = "Tamam" // Buton metni
         
         // --- PUSH NOTIFICATIONS SETUP ---
         UNUserNotificationCenter.current().delegate = self

@@ -19,6 +19,8 @@
 		335A74212F75D8020003EFF8 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 335A74202F75D8020003EFF8 /* FirebaseMessaging */; };
 		3399E8922F20532E005C929A /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 3399E8912F20532E005C929A /* SocketIO */; };
 		3399E8952F393C07005C929A /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3399E8942F393C07005C929A /* SnapKit */; };
+		33C8FB212F892E8100F0C46E /* RtcBasic in Frameworks */ = {isa = PBXBuildFile; productRef = 33C8FB202F892E8100F0C46E /* RtcBasic */; };
+		33C8FB232F892E8100F0C46E /* VideoCodecEnc in Frameworks */ = {isa = PBXBuildFile; productRef = 33C8FB222F892E8100F0C46E /* VideoCodecEnc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -53,6 +55,7 @@
 			files = (
 				335A74212F75D8020003EFF8 /* FirebaseMessaging in Frameworks */,
 				335A71C32F578A730003EFF8 /* FirebaseDatabase in Frameworks */,
+				33C8FB232F892E8100F0C46E /* VideoCodecEnc in Frameworks */,
 				3399E8922F20532E005C929A /* SocketIO in Frameworks */,
 				335A71CE2F5794DB0003EFF8 /* Kingfisher in Frameworks */,
 				335A71C12F578A730003EFF8 /* FirebaseCrashlytics in Frameworks */,
@@ -62,6 +65,7 @@
 				3399E8952F393C07005C929A /* SnapKit in Frameworks */,
 				335A71C52F578A730003EFF8 /* FirebaseFirestore in Frameworks */,
 				335A72182F731E4C0003EFF8 /* IQKeyboardManagerSwift in Frameworks */,
+				33C8FB212F892E8100F0C46E /* RtcBasic in Frameworks */,
 				335A72062F71FAF50003EFF8 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -125,6 +129,8 @@
 				335A72072F71FAF50003EFF8 /* GoogleSignInSwift */,
 				335A72172F731E4C0003EFF8 /* IQKeyboardManagerSwift */,
 				335A74202F75D8020003EFF8 /* FirebaseMessaging */,
+				33C8FB202F892E8100F0C46E /* RtcBasic */,
+				33C8FB222F892E8100F0C46E /* VideoCodecEnc */,
 			);
 			productName = MorChatApp;
 			productReference = 3399E8422F20350F005C929A /* MorChatApp.app */;
@@ -163,6 +169,7 @@
 				335A71FA2F661C100003EFF8 /* XCRemoteSwiftPackageReference "WebRTC" */,
 				335A72042F71FAF50003EFF8 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				335A72162F731E4C0003EFF8 /* XCRemoteSwiftPackageReference "IQKeyboardManager" */,
+				33C8FB1F2F892E8100F0C46E /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 3399E8432F20350F005C929A /* Products */;
@@ -202,7 +209,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MorChatApp/MorChatApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 32QGKVDU76;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MorChatApp/Info.plist;
@@ -236,7 +243,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = MorChatApp/MorChatApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 32QGKVDU76;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MorChatApp/Info.plist;
@@ -466,6 +473,14 @@
 				minimumVersion = 5.7.1;
 			};
 		};
+		33C8FB1F2F892E8100F0C46E /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AgoraIO/AgoraRtcEngine_iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.6.2;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -528,6 +543,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3399E8932F393C07005C929A /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		33C8FB202F892E8100F0C46E /* RtcBasic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33C8FB1F2F892E8100F0C46E /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = RtcBasic;
+		};
+		33C8FB222F892E8100F0C46E /* VideoCodecEnc */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 33C8FB1F2F892E8100F0C46E /* XCRemoteSwiftPackageReference "AgoraRtcEngine_iOS" */;
+			productName = VideoCodecEnc;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

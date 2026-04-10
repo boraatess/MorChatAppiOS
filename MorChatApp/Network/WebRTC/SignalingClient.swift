@@ -1,47 +1,47 @@
+
+//
+//  SignalingClient.swift
+//  MorChatApp
+//
+//  Created by bora ateş on 12.02.2026.
+//
+
+
 import Foundation
 import FirebaseFirestore
 import FirebaseAuth
-import WebRTC
+// WebRTC importu sildik
+
 
 protocol SignalingClientDelegate: AnyObject {
-    func signalingClient(_ client: SignalingClient, didReceiveRemoteSdp sdp: RTCSessionDescription)
-    func signalingClient(_ client: SignalingClient, didReceiveCandidate candidate: RTCIceCandidate)
     func signalingClient(_ client: SignalingClient, didChangeStatus status: String)
 }
 
+// MARK: - SignalingClient
 final class SignalingClient {
     weak var delegate: SignalingClientDelegate?
     private let db = Firestore.firestore()
     private var callId: String = ""
     private var listener: ListenerRegistration?
-    private var candidateListener: ListenerRegistration?
-    
+
     static let shared = SignalingClient()
-    
-    init() {}
-    
+    private init() {}
+
     deinit {
         listener?.remove()
-        candidateListener?.remove()
     }
-    
+
     // MARK: - Caller Flow
-    
     func createCall(receiverId: String, isVideo: Bool, completion: @escaping (String) -> Void) {
-        guard let callerId = Auth.auth().currentUser?.uid else { 
-            print("❌ Signaling: Caller ID not found (User not logged in)")
-            return 
-        }
+        guard let callerId = Auth.auth().currentUser?.uid else { return }
         
-        if callerId == receiverId {
-            print("⚠️ Signaling: You cannot call yourself.")
-            return
-        }
+        print("📞 Arama Başlatılıyor...")
+        print("📞 Arayan (Kimliğim): \(callerId)")
+        print("📞 Aranan (Karşı Taraf): \(receiverId)")
         
-        print("📞 Signaling: Creating call to \(receiverId)...")
         let callDoc = db.collection("Calls").document()
         self.callId = callDoc.documentID
-        
+
         let callData: [String: Any] = [
             "callerId": callerId,
             "receiverId": receiverId,
@@ -49,116 +49,97 @@ final class SignalingClient {
             "type": isVideo ? "video" : "voice",
             "createdAt": FieldValue.serverTimestamp()
         ]
-        
+
         callDoc.setData(callData) { [weak self] error in
             guard let self = self else { return }
-            if let error = error {
-                print("❌ Signaling: Error creating call doc: \(error.localizedDescription)")
-            } else {
-                print("✅ Signaling: Call doc created with ID: \(self.callId)")
+            if error == nil {
+                // 🔥 Arama kaydı oluşturulduğunda bildirimi de patlatalım
+                self.createNotificationLog(callId: self.callId, receiverId: receiverId, isVideo: isVideo)
                 completion(self.callId)
             }
-
         }
 
-        
-        // Listen for Answer and Status changes
+        // Sadece durum takibi yapıyoruz
         listener = callDoc.addSnapshotListener { [weak self] snapshot, _ in
-            guard let self = self, let snapshot = snapshot, let data = snapshot.data() else { return }
-
-            
+            guard let self = self, let data = snapshot?.data() else { return }
             if let status = data["status"] as? String {
                 self.delegate?.signalingClient(self, didChangeStatus: status)
             }
-            
-            if let answerData = data["answer"] as? [String: Any],
-               let sdp = answerData["sdp"] as? String {
-                let answerSdp = RTCSessionDescription(type: .answer, sdp: sdp)
-                self.delegate?.signalingClient(self, didReceiveRemoteSdp: answerSdp)
-            }
         }
-        
-        // Listen for Receiver Candidates
-        candidateListener = callDoc.collection("receiverCandidates").addSnapshotListener { [weak self] snippet, _ in
-            guard let self = self, let docChanges = snippet?.documentChanges else { return }
+    }
 
-            for change in docChanges {
-                if change.type == .added {
-                    let data = change.document.data()
-                    if let sdp = data["sdp"] as? String,
-                       let sdpMLineIndex = data["sdpMLineIndex"] as? Int32,
-                       let sdpMid = data["sdpMid"] as? String {
-                        let candidate = RTCIceCandidate(sdp: sdp, sdpMLineIndex: sdpMLineIndex, sdpMid: sdpMid)
-                        self.delegate?.signalingClient(self, didReceiveCandidate: candidate)
-                    }
+    private func createNotificationLog(callId: String, receiverId: String, isVideo: Bool) {
+        guard let currentUid = Auth.auth().currentUser?.uid else { return }
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        
+        // Kendi profil bilgilerimizi (Ad, Resim vb.) almak için profil tablomuza bakmalıyız
+        let myCollection = (userType == "guide") ? "PublisherProfile" : "UserWatcher"
+        
+        Firestore.firestore().collection(myCollection).document(currentUid).getDocument { snapshot, _ in
+            guard let data = snapshot?.data() else { return }
+            let myName = data["name"] as? String ?? "Bilinmeyen"
+            let myImage = (data["profilePic"] as? String) ?? (data["profileImage"] as? String) ?? ""
+            let myPhone = data["phoneNumber"] as? String ?? ""
+            
+            let notificationData: [String: Any] = [
+                "callId": callId,
+                "image": myImage,
+                "isVoiceOnly": !isVideo,
+                "name": myName,
+                "phone": myPhone,
+                "publisherId": (userType == "guide") ? currentUid : receiverId,
+                "watcherId": (userType == "guide") ? receiverId : currentUid,
+                "timeStamp": FieldValue.serverTimestamp()
+            ]
+            
+            let targetCollection = (userType == "user") ? "NotificationListPublisher" : "NotificationListWatcher"
+            
+            print("📣 Bildirim Hazırlanıyor...")
+            print("📣 Hedef Koleksiyon: \(targetCollection)")
+            print("📣 Aranan Kişi (ReceiverID): \(receiverId)")
+            
+            Firestore.firestore().collection(targetCollection).addDocument(data: notificationData) { error in
+                if let error = error {
+                    print("❌ Bildirim oluşturulamadı: \(error.localizedDescription)")
+                } else {
+                    print("✅ Bildirim '\(targetCollection)' koleksiyonuna başarıyla yazıldı. Hedef: \(receiverId)")
                 }
             }
         }
+        
     }
-    
-    func sendOffer(sdp: RTCSessionDescription) {
-        let offer = SessionDescription(from: sdp)
-        let dict: [String: Any] = ["sdp": offer.sdp, "type": offer.type]
-        db.collection("Calls").document(callId).updateData(["offer": dict])
-    }
-    
+
     // MARK: - Receiver Flow
-    
     func joinCall(callId: String) {
         self.callId = callId
         let callDoc = db.collection("Calls").document(callId)
-        
-        // Listen for Offer
-        callDoc.getDocument { [weak self] snapshot, _ in
+
+        listener = callDoc.addSnapshotListener { [weak self] snapshot, _ in
             guard let self = self, let data = snapshot?.data() else { return }
-
-            
-            if let offerData = data["offer"] as? [String: Any],
-               let sdp = offerData["sdp"] as? String {
-                let offerSdp = RTCSessionDescription(type: .offer, sdp: sdp)
-                self.delegate?.signalingClient(self, didReceiveRemoteSdp: offerSdp)
-            }
-        }
-        
-        // Listen for Caller Candidates
-        candidateListener = callDoc.collection("callerCandidates").addSnapshotListener { [weak self] snippet, _ in
-            guard let self = self, let docChanges = snippet?.documentChanges else { return }
-
-            for change in docChanges {
-                if change.type == .added {
-                    let data = change.document.data()
-                    if let sdp = data["sdp"] as? String,
-                       let sdpMLineIndex = data["sdpMLineIndex"] as? Int32,
-                       let sdpMid = data["sdpMid"] as? String {
-                        let candidate = RTCIceCandidate(sdp: sdp, sdpMLineIndex: sdpMLineIndex, sdpMid: sdpMid)
-                        self.delegate?.signalingClient(self, didReceiveCandidate: candidate)
-                    }
-                }
+            if let status = data["status"] as? String {
+                self.delegate?.signalingClient(self, didChangeStatus: status)
             }
         }
     }
-    
-    func sendAnswer(sdp: RTCSessionDescription) {
-        let answer = SessionDescription(from: sdp)
-        let dict: [String: Any] = ["sdp": answer.sdp, "type": answer.type]
-        db.collection("Calls").document(callId).updateData(["answer": dict, "status": "accepted"])
-    }
-    
+
     func endCall() {
-        if !callId.isEmpty {
-            db.collection("Calls").document(callId).updateData(["status": "ended"])
-            callId = ""
-            listener?.remove()
-            candidateListener?.remove()
-        }
+        guard !callId.isEmpty else { return }
+        db.collection("Calls").document(callId).updateData(["status": "ended"])
+        callId = ""
+        listener?.remove()
+        listener = nil
     }
-    
+
+    func acceptCall(callId: String) {
+        db.collection("Calls").document(callId).updateData(["status": "accepted"])
+        self.delegate?.signalingClient(self, didChangeStatus: "accepted")
+    }
+
     func rejectCall(callId: String) {
         db.collection("Calls").document(callId).updateData(["status": "rejected"])
     }
-    
-    // MARK: - Global Listener
-    
+
+    // MARK: - Incoming Call Listener
     func listenForIncomingCalls(completion: @escaping (String, String, Bool) -> Void) -> ListenerRegistration? {
         guard let currentUid = Auth.auth().currentUser?.uid else { return nil }
         
@@ -166,27 +147,17 @@ final class SignalingClient {
             .whereField("receiverId", isEqualTo: currentUid)
             .whereField("status", isEqualTo: "ringing")
             .addSnapshotListener { snippet, _ in
-                guard let docs = snippet?.documents else { return }
-
-                for doc in docs {
+                guard let changes = snippet?.documentChanges else { return }
+                for change in changes where change.type == .added {
+                    let doc = change.document
                     let data = doc.data()
                     let callId = doc.documentID
                     let callerId = data["callerId"] as? String ?? ""
                     let isVideo = (data["type"] as? String) == "video"
                     completion(callId, callerId, isVideo)
+                    
                 }
             }
-    }
-    
-    // ICE Candidates
-    func send(candidate: RTCIceCandidate, isCaller: Bool) {
-        let ice = IceCandidate(from: candidate)
-        let dict: [String: Any] = [
-            "sdp": ice.sdp,
-            "sdpMLineIndex": ice.sdpMLineIndex,
-            "sdpMid": ice.sdpMid ?? ""
-        ]
-        let collectionName = isCaller ? "callerCandidates" : "receiverCandidates"
-        db.collection("Calls").document(callId).collection(collectionName).addDocument(data: dict)
+        
     }
 }

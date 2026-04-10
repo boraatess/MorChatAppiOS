@@ -1,45 +1,46 @@
 import UIKit
 import SnapKit
-import WebRTC
+import AgoraRtcKit
 import AVFoundation
 import AudioToolbox
+import AgoraInfra_iOS
 
-final class CallViewController: UIViewController {
+
+final class CallViewController: BaseVC {
 
     private let profile: PublisherProfile
     private let isVideoCall: Bool
     private let incomingCallId: String?
-    
-    // MARK: - Core WebRTC Elements
-    private let rtcClient = WebRTCClient()
+
+    // MARK: - Core Agora & Signaling
+    private let agoraManager = AgoraManager.shared
     private let signalingClient = SignalingClient.shared
     private var systemSoundID: SystemSoundID = 0
-    
-    // MARK: - UI Elements
+
+    // MARK: - UI
     private let backgroundImageView = UIImageView()
-    private let remoteVideoView = RTCMTLVideoView()
-    private let localVideoView = RTCMTLVideoView()
+    private let remoteVideoView = UIView() // Agora için standart UIView yeterlidir
+    private let localVideoView = UIView()  // Agora için standart UIView yeterlidir
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
-    
+
     private let topInfoContainer = UIView()
     private let nameLabel = UILabel()
     private let durationLabel = UILabel()
-    
-    private let connectingLabel = UILabel()
+    fileprivate let connectingLabel = UILabel()
     private let pulseAnimationView = UIView()
-    
     private let bottomControlsContainer = UIView()
     private let muteButton = UIButton(type: .system)
     private let switchCameraButton = UIButton(type: .system)
     private let cameraOffButton = UIButton(type: .system)
     private let endCallButton = UIButton(type: .system)
-    
-    // State Tracker
+
+    // MARK: - State
     private var isMuted = false
     private var isCameraOff = false
     private var timer: Timer?
     private var secondsElapsed = 0
-
+    private var callDidConnect = false
+    private var remoteTrackAdded = false
     
     // MARK: - Init
     init(profile: PublisherProfile, isVideoCall: Bool, callId: String? = nil) {
@@ -48,130 +49,151 @@ final class CallViewController: UIViewController {
         self.incomingCallId = callId
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        headerView.isHidden = true
+
         setupUI()
         setupConstraints()
         setupActions()
         configureData()
         startCallAnimation()
+        showLoading()
+
+        // 1. Agora Hazırlığı
+        agoraManager.delegate = self
+        agoraManager.initializeAgora()
         
-        // Start camera feed instantly
-        rtcClient.delegate = self
-        rtcClient.createPeerConnection()
-        
-        // Setup Signaling
+        // 2. Sinyalleşme Hazırlığı
         signalingClient.delegate = self
-        
+
         if let callId = incomingCallId {
-            // RECEIVER FLOW
-            print("📞 ViewController: Handling Incoming Call \(callId)")
-            connectingLabel.text = "Incoming Call..."
+            print("📞 Agora: Gelen arama kanalına katılıyor: \(callId)")
+            connectingLabel.text = "Bağlanıyor..."
             signalingClient.joinCall(callId: callId)
+            // 🔥 BURASI KRİTİK: Durumu "accepted" yap ki arayan taraf bağlandığını anlasın
+            signalingClient.acceptCall(callId: callId) 
+            
+            agoraManager.joinChannel(channelId: callId)
         } else {
-            // CALLER FLOW
-            print("📞 ViewController: Starting Outgoing Call to \(profile.name ?? "User")")
+            print("📞 Agora: Giden arama başlatılıyor...")
             startCallerFlow()
         }
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Ekran yerleşimi bittiğinde görüntüyü bağla (frame 0 olmamalı)
+        if isVideoCall && localVideoView.frame.width > 0 {
+            agoraKitSetupLocalVideo()
+        }
+    }
+    
+    private func agoraKitSetupLocalVideo() {
+        agoraManager.setupLocalVideo(view: localVideoView)
+    }
 
-        // Connect local video track to our small view
-        if let localVideoTrack = rtcClient.localVideoTrack {
-            localVideoTrack.add(localVideoView)
-        }
-    }
-    
-    private func startCallerFlow() {
-        guard let receiverId = profile.id else { return }
-        signalingClient.createCall(receiverId: receiverId, isVideo: isVideoCall) { [weak self] callId in
-            guard let self = self else { return }
-            print("📞 Call created with ID: \(callId)")
-            
-            // Create WebRTC Offer
-            self.rtcClient.offer { sdp in
-                self.signalingClient.sendOffer(sdp: sdp)
-                print("📤 Offer sent!")
-                self.playAudio(named: "calling") // Uses system sounds now
-            }
-        }
-    }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
     }
-    
-    deinit {
-        rtcClient.endCall()
-        signalingClient.endCall()
-        stopAudio()
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed {
+            agoraManager.leaveChannel()
+            signalingClient.endCall()
+            stopAudio()
+            timer?.invalidate()
+        }
     }
-    
-    // MARK: - Setup UI
+
+    // MARK: - Call Flow
+    private func startCallerFlow() {
+        guard let receiverId = profile.id else { return }
+        signalingClient.createCall(receiverId: receiverId, isVideo: isVideoCall) { [weak self] callId in
+            guard let self = self else { return }
+            print("✅ Firestore: Arama oluşturuldu ID: \(callId)")
+            
+            // 🔥 KRİTİK: Agora kanalına bu ID ile katılıyoruz
+            self.agoraManager.joinChannel(channelId: callId)
+            
+            DispatchQueue.main.async {
+                self.playAudio(named: "calling")
+            }
+        }
+    }
+
+    // MARK: - Setup UI (Agora için sadeleşti)
     private func setupUI() {
         view.backgroundColor = .black
-        
+
         backgroundImageView.contentMode = .scaleAspectFill
         backgroundImageView.clipsToBounds = true
         view.addSubview(backgroundImageView)
-        
-        if isVideoCall {
-            remoteVideoView.videoContentMode = .scaleAspectFill
-            view.addSubview(remoteVideoView)
-        } else {
+
+        remoteVideoView.backgroundColor = .black
+        remoteVideoView.layer.borderColor = UIColor.green.cgColor // DEBUG
+        remoteVideoView.layer.borderWidth = 2
+        view.addSubview(remoteVideoView)
+
+        if !isVideoCall {
             blurEffectView.frame = view.bounds
             blurEffectView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             view.addSubview(blurEffectView)
         }
-        
-        localVideoView.backgroundColor = .darkGray
-        localVideoView.layer.cornerRadius = 16
-        localVideoView.clipsToBounds = true
-        localVideoView.videoContentMode = .scaleAspectFill
+
         if isVideoCall {
+            localVideoView.backgroundColor = .darkGray
+            localVideoView.layer.borderColor = UIColor.red.cgColor // DEBUG
+            localVideoView.layer.borderWidth = 2
+            localVideoView.layer.cornerRadius = 16
+            localVideoView.clipsToBounds = true
             view.addSubview(localVideoView)
+            view.bringSubviewToFront(localVideoView) // En öne getir
         }
-        
+
         topInfoContainer.backgroundColor = UIColor.black.withAlphaComponent(0.4)
         topInfoContainer.layer.cornerRadius = 20
         view.addSubview(topInfoContainer)
-        
+
         nameLabel.font = .systemFont(ofSize: 22, weight: .bold)
         nameLabel.textColor = .white
         topInfoContainer.addSubview(nameLabel)
-        
+
         durationLabel.text = "00:00"
         durationLabel.font = .systemFont(ofSize: 16, weight: .medium)
         durationLabel.textColor = UIColor(white: 0.9, alpha: 1.0)
         topInfoContainer.addSubview(durationLabel)
-        
+
         pulseAnimationView.backgroundColor = UIColor(red: 0.8, green: 0.1, blue: 0.8, alpha: 0.5)
         pulseAnimationView.layer.cornerRadius = 60
         view.addSubview(pulseAnimationView)
-        
-        connectingLabel.text = isVideoCall ? "Video Calling..." : "Voice Calling..."
+
+        connectingLabel.text = isVideoCall ? "Görüntülü Arıyor..." : "Sesli Arıyor..."
         connectingLabel.textColor = .white
         connectingLabel.font = .systemFont(ofSize: 20, weight: .bold)
         view.addSubview(connectingLabel)
-        
+
         view.addSubview(bottomControlsContainer)
-        
+
         setupControl(button: muteButton, icon: "mic.fill", bg: .darkGray)
         setupControl(button: switchCameraButton, icon: "arrow.triangle.2.circlepath.camera", bg: .darkGray)
         setupControl(button: cameraOffButton, icon: "video.fill", bg: .darkGray)
         setupControl(button: endCallButton, icon: "phone.down.fill", bg: .systemRed)
-        
+
         if !isVideoCall {
             switchCameraButton.isHidden = true
             cameraOffButton.isHidden = true
         }
     }
-    
+
     private func setupControl(button: UIButton, icon: String, bg: UIColor) {
         button.setImage(UIImage(systemName: icon), for: .normal)
         button.tintColor = .white
@@ -181,33 +203,26 @@ final class CallViewController: UIViewController {
     }
 
     private func setupConstraints() {
-        backgroundImageView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        if isVideoCall {
-            remoteVideoView.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
-            }
-        }
-        
+        backgroundImageView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        remoteVideoView.snp.makeConstraints { $0.edges.equalToSuperview() }
+
         topInfoContainer.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
             make.centerX.equalToSuperview()
             make.width.equalTo(200)
             make.height.equalTo(64)
         }
-        
+
         nameLabel.snp.makeConstraints { make in
             make.top.equalToSuperview().offset(10)
             make.centerX.equalToSuperview()
         }
-        
+
         durationLabel.snp.makeConstraints { make in
             make.top.equalTo(nameLabel.snp.bottom).offset(4)
             make.centerX.equalToSuperview()
         }
-        
+
         if isVideoCall {
             localVideoView.snp.makeConstraints { make in
                 make.top.equalTo(topInfoContainer.snp.bottom).offset(16)
@@ -216,42 +231,42 @@ final class CallViewController: UIViewController {
                 make.height.equalTo(150)
             }
         }
-        
+
         pulseAnimationView.snp.makeConstraints { make in
             make.center.equalToSuperview()
             make.size.equalTo(120)
         }
-        
+
         connectingLabel.snp.makeConstraints { make in
             make.top.equalTo(pulseAnimationView.snp.bottom).offset(24)
             make.centerX.equalToSuperview()
         }
-        
+
         bottomControlsContainer.snp.makeConstraints { make in
             make.bottom.equalTo(view.safeAreaLayoutGuide).inset(24)
             make.leading.trailing.equalToSuperview().inset(32)
             make.height.equalTo(64)
         }
-        
+
         endCallButton.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview()
+            make.centerY.equalToSuperview()
             make.size.equalTo(64)
         }
-        
+
         if isVideoCall {
             muteButton.snp.makeConstraints { make in
                 make.centerY.equalToSuperview()
                 make.trailing.equalTo(endCallButton.snp.leading).offset(-32)
                 make.size.equalTo(64)
             }
-            
+
             cameraOffButton.snp.makeConstraints { make in
                 make.centerY.equalToSuperview()
                 make.leading.equalTo(endCallButton.snp.trailing).offset(32)
                 make.size.equalTo(64)
             }
-            
+
             switchCameraButton.snp.makeConstraints { make in
                 make.bottom.equalTo(cameraOffButton.snp.top).offset(-16)
                 make.centerX.equalTo(cameraOffButton)
@@ -266,11 +281,11 @@ final class CallViewController: UIViewController {
             }
         }
     }
-    
+
     private func configureData() {
-        nameLabel.text = profile.name ?? "Unknown"
+        nameLabel.text = profile.name ?? "Bilinmiyor"
     }
-    
+
     private func setupActions() {
         endCallButton.addTarget(self, action: #selector(endTapped), for: .touchUpInside)
         muteButton.addTarget(self, action: #selector(muteTapped), for: .touchUpInside)
@@ -278,148 +293,139 @@ final class CallViewController: UIViewController {
         switchCameraButton.addTarget(self, action: #selector(switchCameraTapped), for: .touchUpInside)
     }
 
+    // MARK: - Animation & Timer
     private func startCallAnimation() {
         UIView.animate(withDuration: 1.0, delay: 0, options: [.autoreverse, .repeat, .curveEaseInOut]) {
             self.pulseAnimationView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             self.pulseAnimationView.alpha = 0.5
-        } completion: { _ in }
+        }
     }
-    
+
     private func stopCallAnimationAndConnect() {
-        guard pulseAnimationView.isHidden == false else { return }
+        guard !callDidConnect else { return }
+        callDidConnect = true
+        hideLoading()
         pulseAnimationView.layer.removeAllAnimations()
         pulseAnimationView.isHidden = true
         connectingLabel.isHidden = true
         stopAudio()
         startTimer()
     }
-    
-    private func playAudio(named: String) {
-        print("🔊 Playing system sound...")
-        // 1001 is a more common 'Ringtone' tone
-        let soundID: SystemSoundID = 1001
-        self.systemSoundID = soundID
-        
-        // Loop the sound
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] timer in
-            guard let self = self, self.systemSoundID != 0 else {
-                timer.invalidate()
-                return
-            }
-            print("🔊 Triggering sound \(self.systemSoundID)")
-            AudioServicesPlayAlertSound(self.systemSoundID) // Alert sound is more reliable than SystemSound
-        }
-    }
 
-    
-    private func stopAudio() {
-        self.systemSoundID = 0
-    }
-    
     private func startTimer() {
         timer?.invalidate()
         secondsElapsed = 0
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            self?.updateTimerLabel()
+            guard let self = self else { return }
+            self.secondsElapsed += 1
+            let m = self.secondsElapsed / 60
+            let s = self.secondsElapsed % 60
+            self.durationLabel.text = String(format: "%02d:%02d", m, s)
         }
     }
-    
-    private func updateTimerLabel() {
-        secondsElapsed += 1
-        let minutes = secondsElapsed / 60
-        let seconds = secondsElapsed % 60
-        durationLabel.text = String(format: "%02d:%02d", minutes, seconds)
+
+    private func playAudio(named: String) {
+        systemSoundID = 1001
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] t in
+            guard let self = self, self.systemSoundID != 0 else {
+                t.invalidate()
+                return
+            }
+            AudioServicesPlayAlertSound(self.systemSoundID)
+        }
     }
 
+    private func stopAudio() {
+        systemSoundID = 0
+    }
+
+    // MARK: - Actions
     @objc private func endTapped() {
+        timer?.invalidate()
+        hideLoading()
+        agoraManager.leaveChannel()
         signalingClient.endCall()
-        rtcClient.endCall()
         stopAudio()
         dismiss(animated: true)
     }
-    
+
     @objc private func muteTapped() {
         isMuted.toggle()
         muteButton.backgroundColor = isMuted ? .white : .darkGray
         muteButton.tintColor = isMuted ? .black : .white
-        let icon = isMuted ? "mic.slash.fill" : "mic.fill"
-        muteButton.setImage(UIImage(systemName: icon), for: .normal)
+        muteButton.setImage(UIImage(systemName: isMuted ? "mic.slash.fill" : "mic.fill"), for: .normal)
+        agoraManager.muteAudio(isMuted)
     }
-    
+
     @objc private func cameraOffTapped() {
         isCameraOff.toggle()
         cameraOffButton.backgroundColor = isCameraOff ? .white : .darkGray
         cameraOffButton.tintColor = isCameraOff ? .black : .white
-        let icon = isCameraOff ? "video.slash.fill" : "video.fill"
-        cameraOffButton.setImage(UIImage(systemName: icon), for: .normal)
+        cameraOffButton.setImage(UIImage(systemName: isCameraOff ? "video.slash.fill" : "video.fill"), for: .normal)
         localVideoView.isHidden = isCameraOff
+        agoraManager.disableVideo(isCameraOff)
     }
-    
+
     @objc private func switchCameraTapped() {
-        rtcClient.switchCamera()
-        UIView.animate(withDuration: 0.2, animations: {
+        agoraManager.switchCamera()
+        UIView.animate(withDuration: 0.2) {
             self.switchCameraButton.transform = self.switchCameraButton.transform.rotated(by: .pi)
-        })
+        }
     }
 }
 
-extension CallViewController: WebRTCClientDelegate {
-    func webRTCClient(_ client: WebRTCClient, didDiscoverLocalCandidate candidate: RTCIceCandidate) {
-        signalingClient.send(candidate: candidate, isCaller: incomingCallId == nil)
+// MARK: - AgoraManagerDelegate
+extension CallViewController: AgoraManagerDelegate {
+    
+    func agoraManager(_ manager: AgoraManager, didJoinedRemoteUser uid: UInt, withView view: UIView) {
+        
+        print("👤 Agora: Karşı taraf ekrana bağlanıyor. UID: \(uid)")
+
+        DispatchQueue.main.async {
+            print("👤 Agora: Karşı taraf ekrana bağlanıyor. UID: \(uid)")
+            
+            // Agora'nın oluşturduğu view'ı bizim remoteVideoView'ın içine gömüyoruz
+            let videoCanvas = AgoraRtcVideoCanvas()
+            videoCanvas.uid = uid
+            videoCanvas.view = self.remoteVideoView
+            videoCanvas.renderMode = .hidden
+            self.agoraManager.agoraKit?.setupRemoteVideo(videoCanvas)
+            
+            self.stopCallAnimationAndConnect()
+            
+        }
     }
     
-    func webRTCClient(_ client: WebRTCClient, didChangeConnectionState state: RTCIceConnectionState) {
+    func agoraManager(_ manager: AgoraManager, didOfflineOfUid uid: UInt) {
         DispatchQueue.main.async {
-            switch state {
-            case .connected, .completed:
-                self.stopCallAnimationAndConnect()
-            case .failed, .disconnected:
+            self.endTapped()
+        }
+    }
+    
+    func agoraManager(_ manager: AgoraManager, didJoinedChannel channel: String) {
+        print("✅ Agora: Kanala katılım başarılı: \(channel)")
+        DispatchQueue.main.async {
+            // Loader ve arkasındaki kutuyu tamamen gizle
+            self.loadingIndicator.stopAnimating()
+            self.loadingIndicator.isHidden = true
+            self.loadingContainer.isHidden = true
+            self.connectingLabel.text = "Bağlanıyor..."
+        }
+        
+        
+    }
+}
+
+// MARK: - SignalingClientDelegate (Sadece durum takibi için)
+extension CallViewController: SignalingClientDelegate {
+    func signalingClient(_ client: SignalingClient, didChangeStatus status: String) {
+        DispatchQueue.main.async {
+            print("📞 Signaling status: \(status)")
+            switch status {
+            case "rejected", "ended":
                 self.endTapped()
             default:
                 break
-            }
-        }
-    }
-    
-    func webRTCClient(_ client: WebRTCClient, didReceiveRemoteVideoTrack track: RTCVideoTrack) {
-        DispatchQueue.main.async {
-            track.add(self.remoteVideoView)
-            self.stopCallAnimationAndConnect()
-        }
-    }
-}
-
-extension CallViewController: SignalingClientDelegate {
-    func signalingClient(_ client: SignalingClient, didReceiveRemoteSdp sdp: RTCSessionDescription) {
-        rtcClient.set(remoteSdp: sdp) { [weak self] error in
-            if let error = error {
-                print("❌ Error setting remote SDP: \(error)")
-                return
-            }
-            
-            if sdp.type == .offer {
-                self?.rtcClient.answer { answerSdp in
-                    self?.signalingClient.sendAnswer(sdp: answerSdp)
-                }
-            }
-        }
-    }
-    
-    func signalingClient(_ client: SignalingClient, didReceiveCandidate candidate: RTCIceCandidate) {
-        rtcClient.set(remoteCandidate: candidate) { error in
-            if let error = error {
-                print("❌ Error setting remote candidate: \(error)")
-            }
-        }
-    }
-    
-    func signalingClient(_ client: SignalingClient, didChangeStatus status: String) {
-        DispatchQueue.main.async {
-            print("📞 Signaling Status Changed: \(status)")
-            if status == "accepted" {
-                self.stopCallAnimationAndConnect()
-            } else if status == "rejected" || status == "ended" {
-                self.endTapped()
             }
         }
     }

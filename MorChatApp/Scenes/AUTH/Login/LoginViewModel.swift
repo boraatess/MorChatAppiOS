@@ -9,6 +9,7 @@ protocol LoginViewModelInputprotocol: AnyObject {
 protocol LoginViewModelOutputprotocol: AnyObject {
     func loginSuccess()
     func showAlert(message: String)
+    func setLoader(isVisible: Bool)
 }
 
 class LoginViewModel: LoginViewModelInputprotocol {
@@ -25,7 +26,9 @@ class LoginViewModel: LoginViewModelInputprotocol {
     }
     
     func loginWithGoogle(idToken: String, accessToken: String) {
+        output?.setLoader(isVisible: true)
         authService.signInWithGoogle(idToken: idToken, accessToken: accessToken) { [weak self] result in
+            self?.output?.setLoader(isVisible: false)
             switch result {
             case .success:
                 UserDefaults.standard.set("user", forKey: "userType")
@@ -37,7 +40,9 @@ class LoginViewModel: LoginViewModelInputprotocol {
     }
     
     func loginWithApple(idToken: String, rawNonce: String, fullName: String?) {
+        output?.setLoader(isVisible: true)
         authService.signInWithApple(idToken: idToken, rawNonce: rawNonce, fullName: fullName) { [weak self] result in
+            self?.output?.setLoader(isVisible: false)
             switch result {
             case .success:
                 UserDefaults.standard.set("user", forKey: "userType")

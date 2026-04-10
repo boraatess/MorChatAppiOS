@@ -62,6 +62,10 @@ final class PublisherCardCell: UICollectionViewCell {
         nameLabel.text = model.name
         statusLabel.text = model.status ?? "Away"
         
+        // 🔥 ONLINE DURUMUNA GÖRE RENK DEĞİŞİMİ
+        let isOnline = (model.status == "Online" || model.status == "Çevrimiçi")
+        statusPill.backgroundColor = isOnline ? UIColor.systemGreen.withAlphaComponent(0.9) : UIColor.systemPink.withAlphaComponent(0.8)
+        
         // Clear previous tags
         tagsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
         

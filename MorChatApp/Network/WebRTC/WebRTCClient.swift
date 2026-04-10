@@ -1,5 +1,15 @@
+//
+//  WebRTCClient.swift
+//  MorChatApp
+//
+//  Created by bora ateş on 21.01.2026.
+//
+
+
 import Foundation
 import WebRTC
+import CoreMedia
+import AVFoundation
 
 protocol WebRTCClientDelegate: AnyObject {
     func webRTCClient(_ client: WebRTCClient, didDiscoverLocalCandidate candidate: RTCIceCandidate)
@@ -8,210 +18,262 @@ protocol WebRTCClientDelegate: AnyObject {
 }
 
 final class WebRTCClient: NSObject {
-    
+
     weak var delegate: WebRTCClientDelegate?
     private let factory: RTCPeerConnectionFactory
     private var peerConnection: RTCPeerConnection?
-    
-    // Tracks
+
     var localVideoTrack: RTCVideoTrack?
     private var localAudioTrack: RTCAudioTrack?
     private var localVideoSource: RTCVideoSource?
-    private var localAudioSource: RTCAudioSource?
     private var videoCapturer: RTCCameraVideoCapturer?
-    
-    // Constraints
+
+    // FIX 1: Candidate race condition için kuyruk
+    private var pendingCandidates: [RTCIceCandidate] = []
+    private var hasRemoteSdp = false
+
     private let mediaConstraints = RTCMediaConstraints(
-        mandatoryConstraints: [
-            kRTCMediaConstraintsOfferToReceiveAudio: kRTCMediaConstraintsValueTrue,
-            kRTCMediaConstraintsOfferToReceiveVideo: kRTCMediaConstraintsValueTrue
-        ],
+        mandatoryConstraints: nil,
         optionalConstraints: nil
     )
-    
-    private let rtcAudioSession = RTCAudioSession.sharedInstance()
-    
-    // Google'nin bedava STUN sunucuları (P2P bağlantı sağlar ama Tunnelsuzdur)
-    private let defaultIceServers = ["stun:stun.l.google.com:19302",
-                                     "stun:stun1.l.google.com:19302"]
-    
+
+    private let defaultIceServers: [RTCIceServer] = [
+        RTCIceServer(urlStrings: [
+            "stun:stun.l.google.com:19302",
+            "stun:stun1.l.google.com:19302",
+            "stun:stun2.l.google.com:19302"
+        ]),
+        // Hata ayıklama için geçici test TURN sunucusu (Symmetric NAT / 4G engelini aşmak için)
+        RTCIceServer(urlStrings: [
+            "turn:openrelay.metered.ca:80",
+            "turn:openrelay.metered.ca:443",
+            "turn:openrelay.metered.ca:443?transport=tcp"
+        ], username: "openrelayproject", credential: "openrelayproject")
+    ]
+
     override init() {
         RTCInitializeSSL()
         let videoEncoderFactory = RTCDefaultVideoEncoderFactory()
         let videoDecoderFactory = RTCDefaultVideoDecoderFactory()
-        
-        self.factory = RTCPeerConnectionFactory(encoderFactory: videoEncoderFactory, decoderFactory: videoDecoderFactory)
-        
+        self.factory = RTCPeerConnectionFactory(
+            encoderFactory: videoEncoderFactory,
+            decoderFactory: videoDecoderFactory
+        )
         super.init()
-        self.setupLocalTracks()
+        setupLocalTracks()
     }
-    
+
     func createPeerConnection() {
         let config = RTCConfiguration()
         config.sdpSemantics = .unifiedPlan
         config.continualGatheringPolicy = .gatherContinually
-        // STUN server ayarı - Gerçek sunucu IP'mizi bulmamızı sağlar
-        config.iceServers = [RTCIceServer(urlStrings: defaultIceServers)]
-        
-        // Bazı sürümlerde constraints nil kabul etmez, boş bir nesne verelim
-        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
+        config.iceServers = defaultIceServers
+
+        let constraints = RTCMediaConstraints(
+            mandatoryConstraints: nil,
+            optionalConstraints: ["DtlsSrtpKeyAgreement": kRTCMediaConstraintsValueTrue]
+        )
+
         peerConnection = factory.peerConnection(with: config, constraints: constraints, delegate: self)
-        
-        // Audio Track ekleme
-        if let audioTrack = self.localAudioTrack {
-            peerConnection?.add(audioTrack, streamIds: ["stream0"])
+        setupTransceivers()
+    }
+
+    private func setupTransceivers() {
+        guard let peerConnection = peerConnection else { return }
+
+        // Mükemmel Eşleşme (Perfect Mapping) için addTransceiver yerine add(track) kullanılır.
+        // Bu sayede Karşı taraf (Answer) teklif aldığında yeni transceiver yaratmaz, olanı eşler!
+        if let audioTrack = localAudioTrack {
+            peerConnection.add(audioTrack, streamIds: ["stream0"])
         }
-        
-        // Video Track için Transceiver kullanımı (Unified Plan için önerilen)
-        if let videoTrack = self.localVideoTrack {
-            let transceiverInit = RTCRtpTransceiverInit()
-            transceiverInit.streamIds = ["stream0"]
-            // Güçlendirilmiş: Hem gönderelim hem alalım (.sendRecv kullanılır)
-            transceiverInit.direction = .sendRecv
-            peerConnection?.addTransceiver(with: videoTrack, init: transceiverInit)
+
+        if let videoTrack = localVideoTrack {
+            peerConnection.add(videoTrack, streamIds: ["stream0"])
+        } else {
+            // Eğer yerel kamera yoksa, izleyici olabilmek için boş receiver ekliyoruz.
+            let init_ = RTCRtpTransceiverInit()
+            init_.direction = .recvOnly
+            peerConnection.addTransceiver(of: .video, init: init_)
         }
     }
-    
+
     private func setupLocalTracks() {
-        // Ses ayarlamaları
-        rtcAudioSession.lockForConfiguration()
+        let audioSession = RTCAudioSession.sharedInstance()
+        audioSession.lockForConfiguration()
         do {
-            try rtcAudioSession.setCategory(AVAudioSession.Category(rawValue: AVAudioSession.Category.playAndRecord.rawValue) ?? .playAndRecord)
-            try rtcAudioSession.setMode(AVAudioSession.Mode(rawValue: AVAudioSession.Mode.voiceChat.rawValue) ?? .default)
-        } catch let error {
-            print("Error parsing audio session: \(error)")
+            try audioSession.setCategory(
+                AVAudioSession.Category(rawValue: AVAudioSession.Category.playAndRecord.rawValue),
+                with: [.allowBluetoothA2DP, .defaultToSpeaker]
+            )
+            try audioSession.setMode(
+                AVAudioSession.Mode(rawValue: AVAudioSession.Mode.videoChat.rawValue)
+            )
+            try audioSession.setActive(true)
+        } catch {
+            print("❌ WebRTC: Audio Session Error: \(error)")
         }
-        rtcAudioSession.unlockForConfiguration()
-        
-        // Ses Track ekleme
-        let audioConstrains = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
-        let audioSource = factory.audioSource(with: audioConstrains)
-        let audioTrack = factory.audioTrack(with: audioSource, trackId: "audio0")
-        self.localAudioSource = audioSource
-        self.localAudioTrack = audioTrack
-        
-        // Video Track ekleme (Ön Kamera)
+        audioSession.unlockForConfiguration()
+
+        let audioSource = factory.audioSource(with: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil))
+        localAudioTrack = factory.audioTrack(with: audioSource, trackId: "audio0")
+
         let videoSource = factory.videoSource()
-        self.localVideoSource = videoSource
-        
-        #if targetEnvironment(simulator)
-        // Simulator kamera desteklemez
-        print("Kamera simülatörde çalışmaz.")
-        #else
-        let cameraDevice = RTCCameraVideoCapturer.captureDevices().first { $0.position == .front } ?? RTCCameraVideoCapturer.captureDevices().first
-        if let device = cameraDevice,
-           let format = RTCCameraVideoCapturer.supportedFormats(for: device).max(by: {
-               let d1 = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
-               let d2 = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
-               return (d1.width * d1.height) < (d2.width * d2.height)
-           }) {
-            
-            self.videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
-            
-            // FPS listesinden 30'a en yakın olanı veya 30'dan küçük en büyük olanı seçelim
-            let fpsRanges = format.videoSupportedFrameRateRanges
-            let targetFps = 30.0
-            let fps = fpsRanges.contains(where: { $0.maxFrameRate >= targetFps }) ? targetFps : (fpsRanges.max(by: { $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? targetFps)
-            
-            self.videoCapturer?.startCapture(with: device, format: format, fps: Int(fps))
+        localVideoSource = videoSource
+
+        #if !targetEnvironment(simulator)
+        let devices = RTCCameraVideoCapturer.captureDevices()
+        if let device = devices.first(where: { $0.position == .front }) ?? devices.first {
+            // FIX 2: Max çözünürlük yerine 720p hedefle
+            let formats = RTCCameraVideoCapturer.supportedFormats(for: device)
+            let format = formats.first(where: {
+                let d = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
+                return d.width == 1280 && d.height == 720
+            }) ?? formats.first(where: {
+                let d = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
+                return d.width <= 1280
+            }) ?? formats.last
+
+            if let targetFormat = format {
+                videoCapturer = RTCCameraVideoCapturer(delegate: videoSource)
+                let fps: Int
+                let ranges = targetFormat.videoSupportedFrameRateRanges
+                if ranges.contains(where: { $0.maxFrameRate >= 30 && $0.minFrameRate <= 30 }) {
+                    fps = 30
+                } else {
+                    fps = Int(ranges.max(by: { $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? 30)
+                }
+                videoCapturer?.startCapture(with: device, format: targetFormat, fps: fps)
+                print("📹 WebRTC: Kamera başlatıldı \(fps) FPS")
+            }
         }
         #endif
-        
+
         let videoTrack = factory.videoTrack(with: videoSource, trackId: "video0")
-        self.localVideoTrack = videoTrack    
+        videoTrack.isEnabled = true
+        localVideoTrack = videoTrack
     }
-    
+
     func offer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
-        // 'nil' kabul etmiyorsa boş veya tanımlı constraints kullanılır
-        peerConnection?.offer(for: mediaConstraints) { (sdp, _) in
-            guard let sdp = sdp else { return }
-            self.peerConnection?.setLocalDescription(sdp, completionHandler: { (_) in
+        peerConnection?.offer(for: mediaConstraints) { sdp, error in
+            guard let sdp = sdp else {
+                print("❌ WebRTC: Offer Error: \(error?.localizedDescription ?? "Bilinmiyor")")
+                return
+            }
+            self.peerConnection?.setLocalDescription(sdp) { _ in
                 completion(sdp)
-            })
+            }
         }
     }
 
-    
     func answer(completion: @escaping (_ sdp: RTCSessionDescription) -> Void) {
-        peerConnection?.answer(for: mediaConstraints) { (sdp, _) in
-            guard let sdp = sdp else { return }
-            self.peerConnection?.setLocalDescription(sdp, completionHandler: { (_) in
+        peerConnection?.answer(for: mediaConstraints) { sdp, error in
+            guard let sdp = sdp else {
+                print("❌ WebRTC: Answer Error: \(error?.localizedDescription ?? "Bilinmiyor")")
+                return
+            }
+            self.peerConnection?.setLocalDescription(sdp) { _ in
                 completion(sdp)
-            })
+            }
         }
     }
 
-    
-    func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> ()) {
-        peerConnection?.setRemoteDescription(remoteSdp, completionHandler: completion)
+    // FIX 3: setRemoteDescription tamamlanana kadar candidate'leri kuyruğa al
+    func set(remoteSdp: RTCSessionDescription, completion: @escaping (Error?) -> Void) {
+        peerConnection?.setRemoteDescription(remoteSdp) { [weak self] error in
+            guard let self = self else { return }
+            if error == nil {
+                self.hasRemoteSdp = true
+                self.pendingCandidates.forEach { candidate in
+                    self.peerConnection?.add(candidate) { _ in }
+                }
+                self.pendingCandidates.removeAll()
+            }
+            completion(error)
+        }
     }
-    
-    func set(remoteCandidate: RTCIceCandidate, completion: @escaping (Error?) -> ()) {
-        peerConnection?.add(remoteCandidate, completionHandler: completion)
+
+    func set(remoteCandidate: RTCIceCandidate, completion: @escaping (Error?) -> Void) {
+        if hasRemoteSdp {
+            peerConnection?.add(remoteCandidate, completionHandler: completion)
+        } else {
+            pendingCandidates.append(remoteCandidate)
+            completion(nil)
+        }
     }
-    
+
+    // FIX 4: endCall'da tüm state sıfırla
     func endCall() {
-        self.peerConnection?.close()
-        self.peerConnection = nil
+        videoCapturer?.stopCapture()
+        peerConnection?.close()
+        peerConnection = nil
+        localVideoTrack = nil
+        localAudioTrack = nil
+        pendingCandidates.removeAll()
+        hasRemoteSdp = false
     }
-    
+
+    func muteAudio(_ isMuted: Bool) {
+        localAudioTrack?.isEnabled = !isMuted
+    }
+
+    func disableVideo(_ isDisabled: Bool) {
+        localVideoTrack?.isEnabled = !isDisabled
+    }
+
     func switchCamera() {
-        guard let capturer = self.videoCapturer else { return }
+        guard let capturer = videoCapturer else { return }
         let devices = RTCCameraVideoCapturer.captureDevices()
-        
-        // Mevcut pozisyonu bulamıyorsa front kabul et
         let currentPosition = (capturer.captureSession.inputs.first as? AVCaptureDeviceInput)?.device.position ?? .front
         let newPosition: AVCaptureDevice.Position = currentPosition == .front ? .back : .front
-        
+
         guard let newDevice = devices.first(where: { $0.position == newPosition }) else { return }
-        
         let formats = RTCCameraVideoCapturer.supportedFormats(for: newDevice)
-        guard let format = formats.max(by: {
-            let d1 = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
-            let d2 = CMVideoFormatDescriptionGetDimensions($1.formatDescription)
-            return (d1.width * d1.height) < (d2.width * d2.height)
-        }) else { return }
-        
-        let fpsRanges = format.videoSupportedFrameRateRanges
-        let fps = fpsRanges.contains(where: { $0.maxFrameRate >= 30 }) ? 30 : (fpsRanges.max(by: { $0.maxFrameRate < $1.maxFrameRate })?.maxFrameRate ?? 30)
-        
-        capturer.stopCapture {
-            capturer.startCapture(with: newDevice, format: format, fps: Int(fps))
+        let format = formats.first(where: {
+            let d = CMVideoFormatDescriptionGetDimensions($0.formatDescription)
+            return d.width == 1280 && d.height == 720
+        }) ?? formats.last
+
+        if let targetFormat = format {
+            capturer.stopCapture {
+                capturer.startCapture(with: newDevice, format: targetFormat, fps: 30)
+            }
         }
     }
 }
 
-
 extension WebRTCClient: RTCPeerConnectionDelegate {
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {}
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {
-        if let videoTrack = stream.videoTracks.first {
-            print("Remote video stream received!")
-            self.delegate?.webRTCClient(self, didReceiveRemoteVideoTrack: videoTrack)
-        }
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange stateChanged: RTCSignalingState) {
+        print("🚥 Signaling State: \(stateChanged.rawValue)")
     }
-    
+
+    // FIX: Unified Plan'da sadece didAdd receiver kullan, stream metodunu boşalt
+    func peerConnection(_ peerConnection: RTCPeerConnection, didAdd stream: RTCMediaStream) {}
+
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd receiver: RTCRtpReceiver, streams: [RTCMediaStream]) {
+        print("📡 Receiver track: \(receiver.track?.kind ?? "yok")")
         if let videoTrack = receiver.track as? RTCVideoTrack {
-            print("Remote video track received via receiver!")
-            self.delegate?.webRTCClient(self, didReceiveRemoteVideoTrack: videoTrack)
+            DispatchQueue.main.async {
+                self.delegate?.webRTCClient(self, didReceiveRemoteVideoTrack: videoTrack)
+            }
         }
     }
-    
+
     func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {}
     func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {}
-    
+
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
-        self.delegate?.webRTCClient(self, didChangeConnectionState: newState)
+        print("❄️ ICE State: \(newState.rawValue)")
+        delegate?.webRTCClient(self, didChangeConnectionState: newState)
     }
-    
-    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {}
-    
+
+    func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
+        print("🧊 Gathering: \(newState.rawValue)")
+    }
+
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
-        self.delegate?.webRTCClient(self, didDiscoverLocalCandidate: candidate)
+        delegate?.webRTCClient(self, didDiscoverLocalCandidate: candidate)
     }
-    
+
     func peerConnection(_ peerConnection: RTCPeerConnection, didRemove candidates: [RTCIceCandidate]) {}
     func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {}
 }

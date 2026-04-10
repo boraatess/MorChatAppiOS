@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import FirebaseFirestore
 
 protocol HomeViewModelInputprotocol: AnyObject {
     func viewDidLoad()
@@ -16,6 +17,7 @@ protocol HomeViewModelOutputprotocol: AnyObject {
     func didFetchUsers(with users: [UserCardModel])
     func didFetchTags(_ tags: [String])
     func didFail(with error: String)
+    func setLoader(isVisible: Bool)
 }
 
 
@@ -30,6 +32,8 @@ class HomeViewModel: HomeViewModelInputprotocol {
     private var allProfiles: [PublisherProfile] = []
     
     private let firestoreService: FirestoreServiceProtocol
+    private var profilesListener: FirebaseFirestore.ListenerRegistration?
+    // Dinleyiciyi saklamak için
     
     private var availableTags: [String] {
         return SharedTagsCloudView.categories.map { $0.name }
@@ -41,11 +45,16 @@ class HomeViewModel: HomeViewModelInputprotocol {
         self.firestoreService = firestoreService
     }
     
+    deinit {
+        // Dinleyiciyi durdur (Memory leak önlemek için)
+        profilesListener?.remove()
+    }
+    
     // MARK: - Lifecycle
     
     func viewDidLoad() {
         output?.didFetchTags(availableTags)
-        fetchUsers()
+        startListeningUsers()
     }
     
     // MARK: - Filtering
@@ -55,13 +64,21 @@ class HomeViewModel: HomeViewModelInputprotocol {
         applyFilter()
     }
     
-    // MARK: - Fetch
+    // MARK: - Fetch (Anlık Dinleme)
     
-    private func fetchUsers() {
-        firestoreService.fetchPublisherProfiles { [weak self] result in
+    private func startListeningUsers() {
+        // Eski dinleyici varsa kaldır
+        profilesListener?.remove()
+        
+        output?.setLoader(isVisible: true) // Yükleme başladı
+        
+        profilesListener = firestoreService.listenPublisherProfiles { [weak self] result in
             DispatchQueue.main.async {
+                self?.output?.setLoader(isVisible: false) // Veri geldi, loader'ı kapat
+                
                 switch result {
                 case .success(let remoteProfiles):
+                    print("🔄 Home: Veriler anlık olarak güncellendi (Kullanıcı Sayısı: \(remoteProfiles.count))")
                     self?.allProfiles = remoteProfiles
                     self?.applyFilter()
                     
@@ -91,7 +108,7 @@ class HomeViewModel: HomeViewModelInputprotocol {
         // 2. UI modeline çevir (AMA referansı KORU 🔥)
         users = filteredProfiles.map { profile in
             
-            let isOnline = (profile.status == "Çevrimiçi")
+            let isOnline = (profile.status == "Online" || profile.status == "Çevrimiçi")
             let tagNames = profile.tagList?.compactMap { self.availableTags[safe: $0] } ?? []
             
             return UserCardModel(

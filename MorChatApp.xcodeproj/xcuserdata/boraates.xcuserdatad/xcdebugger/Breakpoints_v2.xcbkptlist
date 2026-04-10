@@ -16,7 +16,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "231"
             endingLineNumber = "231"
-            landmarkName = "savePublisherProfile(profile:completion:)"
+            landmarkName = "saveUserProfile(user:completion:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

@@ -60,6 +60,8 @@ final class NotificationsVC: BaseVC {
         
         navigationController?.navigationBar.isHidden = true
         updateUI()
+        viewModel.viewDidLoad()
+        
         
     }
     
@@ -107,6 +109,7 @@ final class NotificationsVC: BaseVC {
             collectionView.reloadData()
         }
     }
+    
 }
 
 extension NotificationsVC: NotifiesViewModelOutputProtocol {

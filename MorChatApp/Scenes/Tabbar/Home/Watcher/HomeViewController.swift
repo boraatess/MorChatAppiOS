@@ -167,6 +167,14 @@ extension HomeViewController: HomeViewModelOutputprotocol {
             duration: 2.0
         )
     }
+
+    func setLoader(isVisible: Bool) {
+        if isVisible {
+            showLoading()
+        } else {
+            hideLoading()
+        }
+    }
 }
 
 // MARK: - Layout

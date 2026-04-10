@@ -12,7 +12,7 @@ import FirebaseAuth
 import AuthenticationServices
 import CryptoKit
 
-final class LoginViewController: UIViewController {
+final class LoginViewController: BaseVC {
 
     // MARK: UI Elements
     private let backgroundView = LoginBackgroundView()
@@ -238,6 +238,14 @@ extension LoginViewController: LoginViewModelOutputprotocol {
     
     func showAlert(message: String) {
         showAutoDismissAlert(title: "login_error_title".localized, message: message, duration: 2.0)
+    }
+
+    func setLoader(isVisible: Bool) {
+        if isVisible {
+            showLoading()
+        } else {
+            hideLoading()
+        }
     }
 }
 

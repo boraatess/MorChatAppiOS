@@ -1,7 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
-struct PublisherProfile {
+struct PublisherProfile: Codable {
     var id: String?
     let about: String?
     let age: Int?
