@@ -2,23 +2,18 @@
 //  PublisherProfileVC.swift
 //  MorChatApp
 //
-//  Created by bora ateş on 29.03.2026.
-//
-
-import Foundation
-import UIKit
 
 import UIKit
 import SnapKit
 import FirebaseAuth
+import SwiftUI
 
 final class PublisherProfileVC: BaseVC {
 
-    private var selectedInterests: [InterestModel] = []
-    private var currentUser: UserModel?
+    private let viewModel = PublisherProfileViewModel()
 
     private enum Section: Int, CaseIterable {
-        case stories, gallery, interests, about, nickname, phone, notifications, email, menuGroup
+        case stories, gallery, interests, about, nickname, age, phone, notifications, email, menuGroup
         
         var title: String? {
             switch self {
@@ -26,7 +21,8 @@ final class PublisherProfileVC: BaseVC {
             case .gallery: return "Gallery"
             case .interests: return "Interests / Tags"
             case .about: return "About Me"
-            case .nickname: return "Nickname / Age"
+            case .nickname: return "Nickname"
+            case .age: return "Age"
             case .phone: return "Phone Number"
             case .notifications: return "Notification Permissions"
             case .email: return "E-mail"
@@ -58,44 +54,31 @@ final class PublisherProfileVC: BaseVC {
         return tv
     }()
     
-    // Header Logo "MORCHAT"
-    private let logoLabel: UILabel = {
-        let l = UILabel()
-        l.text = "MORCHAT"
-        l.textColor = .systemPink
-        l.font = .systemFont(ofSize: 22, weight: .black)
-        return l
-    }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = UIColor(red: 0.44, green: 0.20, blue: 0.55, alpha: 1.0)
         setupUI()
-        fetchProfile()
+        viewModel.output = self
+        viewModel.fetchProfile()
     }
     
     private func setupUI() {
         view.addSubview(tableView)
-        
         tableView.snp.makeConstraints { make in
             make.top.equalTo(headerView.snp.bottom).offset(8)
             make.leading.trailing.bottom.equalToSuperview()
         }
-        
         let header = PublisherProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 200))
         header.delegate = self
         tableView.tableHeaderView = header
-        
         setupLogoutFooter()
-        
     }
     
     private func setupLogoutFooter() {
         let footerView = UIView(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 120))
         let logoutButton = UIButton(type: .system)
-        
         var config = UIButton.Configuration.filled()
-        config.title = "Log Out"
+        config.title = "profile_logout".localized
         config.image = UIImage(systemName: "rectangle.portrait.and.arrow.right")
         config.imagePadding = 8
         config.baseBackgroundColor = UIColor(red: 0.18, green: 0.12, blue: 0.30, alpha: 1.0)
@@ -110,20 +93,16 @@ final class PublisherProfileVC: BaseVC {
             make.height.equalTo(44)
         }
         tableView.tableFooterView = footerView
-        
     }
     
     @objc private func logoutTapped() {
         let alert = UIAlertController(title: "profile_logout_alert_title".localized, message: "profile_logout_alert_message".localized, preferredStyle: .alert)
-        
         let cancelAction = UIAlertAction(title: "profile_logout_cancel".localized, style: .cancel)
         let logoutAction = UIAlertAction(title: "profile_logout".localized, style: .destructive) { [weak self] _ in
             self?.performLogout()
         }
-        
         alert.addAction(cancelAction)
         alert.addAction(logoutAction)
-        
         present(alert, animated: true)
     }
     
@@ -135,97 +114,33 @@ final class PublisherProfileVC: BaseVC {
             UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
         }
     }
-    
-    private func fetchProfile() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        // Try to fetch as a regular watcher first
-        FirestoreService.shared.fetchUserProfile(uid: uid) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let user):
-                self.handleFetchedUser(user)
-            case .failure(let error as NSError) where error.code == 404:
-                // If not found in Watchers, try Publishers
-                self.fetchAsPublisher(uidValue: uid)
-            case .failure(let error):
-                print("Error fetching profile: \(error)")
+}
+
+// MARK: - ViewModel Output
+extension PublisherProfileVC: PublisherProfileOutputProtocol {
+    func didUpdateProfile() {
+        DispatchQueue.main.async {
+            if let header = self.tableView.tableHeaderView as? PublisherProfileHeaderView {
+                header.setProfileImage(url: self.viewModel.currentPublisher?.profilePic)
             }
+            self.tableView.reloadData()
         }
     }
     
-    private func fetchAsPublisher(uidValue: String) {
-        FirestoreService.shared.fetchPublisherProfile(publisherId: uidValue) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let pub):
-                // Map PublisherProfile to UserModel for consistent UI handling
-                let mappedUser = UserModel(
-                    uid: pub.id ?? uidValue,
-                    name: pub.name,
-                    email: pub.email,
-                    photoURL: pub.profilePic,
-                    createdAt: pub.last_seen ?? Date(),
-                    interests: [], // We'll compute tags next
-                    tagList: pub.tagList ?? [],
-                    age: pub.age ?? 0,
-                    status: pub.status ?? "Offline"
-                )
-                self.handleFetchedUser(mappedUser)
-            case .failure(let error):
-                print("Error fetching as publisher: \(error)")
-            }
+    func didUpdateLoading(isLoading: Bool) {
+        DispatchQueue.main.async {
+            isLoading ? self.showLoading() : self.hideLoading()
         }
     }
     
-    private func handleFetchedUser(_ user: UserModel) {
-        self.currentUser = user
-        
-        // Fetch all tags first to ensure correct mapping
-        FirestoreService.shared.fetchPublisherTags { [weak self] tagResult in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
-                switch tagResult {
-                case .success(let allTags):
-                    // Map user interests
-                    if let remoteInterests = user.interests, !remoteInterests.isEmpty {
-                        // Match by name
-                        self.selectedInterests = remoteInterests.compactMap { name in
-                            if let tag = allTags.first(where: { $0.name == name }) {
-                                let ui = SharedTagsCloudView.defaultCategories.first(where: { $0.name == name })
-                                return InterestModel(id: tag.id, name: tag.name, icon: ui?.icon ?? "number", color: ui?.color ?? .systemIndigo)
-                            }
-                            return nil
-                        }
-                    } else if let tagList = user.tagList {
-                        // Match by ID
-                        self.selectedInterests = tagList.compactMap { id in
-                            if let tag = allTags.first(where: { $0.id == id }) {
-                                let ui = SharedTagsCloudView.defaultCategories.first(where: { $0.name == tag.name })
-                                return InterestModel(id: tag.id, name: tag.name, icon: ui?.icon ?? "number", color: ui?.color ?? .systemIndigo)
-                            }
-                            return nil
-                        }
-                    }
-                    
-                    self.tableView.reloadData()
-                    
-                case .failure(let error):
-                    print("Error mapping tags: \(error)")
-                    // Fallback to local default mapping if remote fails
-                    self.tableView.reloadData()
-                }
-            }
+    func didFailWithError(message: String) {
+        DispatchQueue.main.async {
+            self.showAlert(title: "Hata", message: message)
         }
-        
-        if let header = self.tableView.tableHeaderView as? PublisherProfileHeaderView {
-            header.setProfileImage(url: user.photoURL)
-        }
-        self.tableView.reloadData()
     }
 }
 
+// MARK: - TableView
 extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
     func numberOfSections(in tableView: UITableView) -> Int {
         return Section.allCases.count
@@ -249,7 +164,6 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
                 make.leading.trailing.equalToSuperview().inset(16)
                 make.top.bottom.equalToSuperview()
             }
-            // Add rounding only to top and bottom of the group
             if indexPath.row == 0 {
                 container.layer.cornerRadius = 10
                 container.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
@@ -263,21 +177,23 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
         }
         
         let cell = tableView.dequeueReusableCell(withIdentifier: ProfileSectionCell.identifier, for: indexPath) as! ProfileSectionCell
-        
         var content = ""
         var tags: [String]? = nil
         var btnTitle: String? = "Edit"
         var btnHidden = false
         
+        let pub = viewModel.currentPublisher
+        
         switch section {
-        case .nickname: content = "\(currentUser?.name ?? "") / \(currentUser?.age ?? 0)"
-        case .email: 
-            content = currentUser?.email ?? ""
+        case .nickname: content = pub?.name ?? ""
+        case .age: content = "\(pub?.age ?? 0)"
+        case .email:
+            content = pub?.email ?? ""
             btnHidden = true
-        case .phone: content = "Not added"
-        case .about: content = "Just chatting"
+        case .phone: content = pub?.phoneNumber ?? "Not added"
+        case .about: content = pub?.about ?? ""
         case .interests:
-            tags = selectedInterests.map { $0.name }
+            tags = viewModel.selectedInterests.map { $0.name }
         case .notifications: 
             content = "On"
             btnTitle = "Turn Off"
@@ -285,11 +201,7 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
         }
         
         cell.configure(title: section.title ?? "", subtitle: section.subtitle, content: content, tags: tags, buttonTitle: btnTitle, isButtonHidden: btnHidden)
-        
-        cell.onEditTapped = { [weak self] in
-            self?.handleEdit(section)
-        }
-        
+        cell.onEditTapped = { [weak self] in self?.handleEdit(section) }
         return cell
     }
     
@@ -305,116 +217,66 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
     }
     
     private func handleEdit(_ section: Section) {
+        let pub = viewModel.currentPublisher
         switch section {
         case .interests:
-            let vc = InterestsSelectionViewController(currentInterests: selectedInterests)
+            let vc = InterestsSelectionViewController(currentInterests: viewModel.selectedInterests)
             vc.delegate = self
             present(vc, animated: true)
-            
-        case .about, .nickname, .phone:
-            showEditAlert(for: section)
-            
-        default:
-            break
+        case .nickname:
+            presentEditSheet(for: .nickname, value: pub?.name ?? "")
+        case .age:
+            presentEditSheet(for: .age, value: "\(pub?.age ?? 0)")
+        case .about:
+            presentEditSheet(for: .about, value: pub?.about ?? "")
+        case .phone:
+            presentEditSheet(for: .phone, value: pub?.phoneNumber ?? "")
+        default: break
         }
     }
     
-    private func showEditAlert(for section: Section) {
-        let title = "Edit \(section.title ?? "")"
-        let alert = UIAlertController(title: title, message: nil, preferredStyle: .alert)
-        
-        alert.addTextField { [weak self] tf in
-            switch section {
-            case .nickname: tf.text = self?.currentUser?.name
-            case .about: tf.text = self?.currentUser?.status // Reusing status for 'About Me' in this context
-            default: break
-            }
+    private func presentEditSheet(for type: PublisherEditType, value: String) {
+        let vc = PublisherEditValueVC(type: type, currentValue: value)
+        vc.delegate = self
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
         }
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Save", style: .default, handler: { [weak self] _ in
-            guard let self = self, let text = alert.textFields?.first?.text, !text.isEmpty else { return }
-            
-            if var user = self.currentUser {
-                switch section {
-                case .nickname: user.name = text
-                case .about: user.status = text
-                default: break
-                }
-                
-                self.currentUser = user
-                self.tableView.reloadData()
-                self.performSave(user: user)
-            }
-        }))
-        
-        present(alert, animated: true)
-    }
-    
-    
-    private func performSave(user: UserModel) {
-        // 1. Save to UserWatcher (for filtering)
-        FirestoreService.shared.saveUserProfile(user: user) { _ in }
-        
-        // 2. Save to PublisherProfile (for specific publisher data)
-        let pub = PublisherProfile(
-            id: user.uid,
-            about: user.status, // Using status as about for now
-            age: user.age,
-            email: user.email,
-            language: "tr", // Default
-            last_seen: Date(),
-            msgToken: nil,
-            name: user.name,
-            phoneNumber: nil,
-            point: 0,
-            profilePic: user.photoURL,
-            status: user.status,
-            interests: user.interests,
-            tagList: user.tagList
-        )
-        FirestoreService.shared.savePublisherProfile(profile: pub) { _ in }
+        present(vc, animated: true)
     }
 }
 
+// MARK: - Edit Delegate
+extension PublisherProfileVC: PublisherEditValueDelegate {
+    func didUpdateValue(type: PublisherEditType, value: String) {
+        switch type {
+        case .nickname: viewModel.saveProfile(name: value, about: nil, age: nil, phone: nil)
+        case .about: viewModel.saveProfile(name: nil, about: value, age: nil, phone: nil)
+        case .age: viewModel.saveProfile(name: nil, about: nil, age: Int(value), phone: nil)
+        case .phone: viewModel.saveProfile(name: nil, about: nil, age: nil, phone: value)
+        }
+    }
+}
+
+// MARK: - Header & Picker Extensions
 extension PublisherProfileVC: PublisherProfileHeaderViewDelegate {
-    
     func publisherHeaderDidTapPhoto() {
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.sourceType = .photoLibrary
         present(picker, animated: true)
     }
-    
-    func publisherHeaderDidTapAddStory() {
-        print("Add Story tapped")
-    }
-    
+    func publisherHeaderDidTapAddStory() { print("Add Story tapped") }
 }
 
 extension PublisherProfileVC: InterestsSelectionDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func didUpdateInterests(_ tags: [InterestModel]) {
-        
-        print("selected tags : \(tags)")
-        
-        self.selectedInterests = tags
-        tableView.reloadData()
-        
-        if var user = currentUser {
-            user.interests = tags.map { $0.name }
-            user.tagList = tags.compactMap { t in SharedTagsCloudView.defaultCategories.firstIndex(where: { $0.name == t.name }) }
-            self.currentUser = user
-            self.performSave(user: user)
-            
-        }
+        viewModel.updateInterests(tags)
     }
-    
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let img = info[.originalImage] as? UIImage {
-            if let header = self.tableView.tableHeaderView as? PublisherProfileHeaderView {
-                header.setProfileImage(img)
-            }
-        }
         picker.dismiss(animated: true)
+        if let img = info[.originalImage] as? UIImage {
+            viewModel.uploadProfileImage(img)
+        }
     }
 }

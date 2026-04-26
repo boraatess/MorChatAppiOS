@@ -55,7 +55,7 @@ final class AppRulesCell: UITableViewCell {
     
     private func setupConstraints() {
         containerView.snp.makeConstraints {
-            $0.edges.equalToSuperview().inset(12)
+            $0.edges.equalToSuperview().inset(8)
         }
         
         iconContainer.snp.makeConstraints {

@@ -178,7 +178,14 @@ final class UserCardCell: UICollectionViewCell {
         var currentLineWidth: CGFloat = 0
         let tagSpacing: CGFloat = 4
         
-        for tagStr in model.tags {
+        var displayedTags = model.mappedTags
+        for interest in model.mappedInterests {
+            if !displayedTags.contains(interest) {
+                displayedTags.append(interest)
+            }
+        }
+        
+        for tagStr in displayedTags {
             let tagView = createTagView(tagStr)
             let tagWidth = calculateTagWidth(for: tagStr) + 16
             

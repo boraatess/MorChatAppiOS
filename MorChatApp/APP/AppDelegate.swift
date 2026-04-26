@@ -11,7 +11,8 @@ import FirebaseMessaging
 import UserNotifications
 import IQKeyboardManagerSwift
 import FirebaseAuth
-
+import SwiftUI
+import GoogleMobileAds
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -25,6 +26,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
                 
         FirebaseApp.configure()
+        
+        MobileAds.shared.start(completionHandler: nil)
+        
+        
+        // Fetch all tags globally so they can be mapped
+        TagManager.shared.fetchTags()
         
         // --- KEYBOARD MANAGER SETUP ---
         IQKeyboardManager.shared.isEnabled = true

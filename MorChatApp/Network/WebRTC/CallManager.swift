@@ -55,9 +55,10 @@ final class CallManager {
                 switch result {
                 case .success(let profile):
                     self?.showIncomingCallUI(callId: callId, profile: profile, isVideo: isVideo)
+                    
                 case .failure:
                     // If we can't find profile, still show something with defaults
-                    let defaultProfile = PublisherProfile(id: callerId, about: nil, age: nil, email: nil, language: nil, last_seen: nil, msgToken: nil, name: "Unknown Caller", phoneNumber: nil, point: nil, profilePic: nil, status: nil, interests: [], tagList: nil)
+                    let defaultProfile = PublisherProfile.empty
                     self?.showIncomingCallUI(callId: callId, profile: defaultProfile, isVideo: isVideo)
                     
                 }

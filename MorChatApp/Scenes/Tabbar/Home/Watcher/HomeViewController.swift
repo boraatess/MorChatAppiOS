@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import SwiftUI
 
 class HomeViewController: BaseVC {
 
@@ -54,9 +55,9 @@ class HomeViewController: BaseVC {
         navigationController?.navigationBar.isHidden = true
 
         setupUI()
-        
         viewModel.output = self
         viewModel.viewDidLoad()
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -231,4 +232,9 @@ final class TagFilterCell: UICollectionViewCell {
             contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
         }
     }
+}
+
+#Preview {
+    HomeViewController().asPreview()
+    
 }

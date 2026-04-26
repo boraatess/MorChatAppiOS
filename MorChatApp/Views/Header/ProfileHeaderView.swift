@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import SwiftUI
 
 protocol ProfileHeaderViewDelegate: AnyObject {
     func didTapBack()
@@ -17,7 +18,6 @@ protocol ProfileHeaderViewDelegate: AnyObject {
 final class ProfileHeaderView: UIView {
 
     weak var delegate: ProfileHeaderViewDelegate?
-    
     
     private lazy var backButton: UIButton = {
         let button = UIButton(type: .system)
@@ -47,7 +47,7 @@ final class ProfileHeaderView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        backgroundColor = .clear
+        backgroundColor = .white
         setupUI()
     }
 
@@ -63,41 +63,40 @@ final class ProfileHeaderView: UIView {
         else {
             iconImageView.isHidden = false
             iconImageView.image = UIImage(named: image)
-
         }
-        
         
     }
 
     @objc private func didTapBack() {
         delegate?.didTapBack()
     }
-
     
     // MARK: - Setup
     private func setupUI() {
-        
         addSubview(backButton)
         backButton.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.equalToSuperview().inset(5)
             make.width.height.equalTo(32)
         }
-        
         addSubview(iconImageView)
         iconImageView.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.equalTo(backButton.snp.trailing).offset(10)
         }
-        
         addSubview(titleLabel)
         titleLabel.snp.makeConstraints { make in
             make.top.equalToSuperview()
             make.leading.equalTo(iconImageView.snp.trailing).offset(10)
+            make.centerY.equalTo(backButton.snp.centerY)
             
         }
         
     }
+    
+}
 
+#Preview {
+    ProfileHeaderView().asPreview()
     
 }

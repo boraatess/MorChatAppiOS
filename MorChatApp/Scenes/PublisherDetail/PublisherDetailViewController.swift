@@ -10,13 +10,14 @@ import SnapKit
 import Kingfisher
 import FirebaseAuth
 import FirebaseFirestore
+import SwiftUI
 
 
-
-final class PublisherDetailViewController: UIViewController {
+final class PublisherDetailViewController: BaseVC {
 
     private let profile: PublisherProfile
     private var isFavorited = false
+    private var currentSelectedUrl: String?
 
     
     // UI Elements
@@ -41,6 +42,17 @@ final class PublisherDetailViewController: UIViewController {
     private let bottomActionStack = UIStackView()
     private let callNowButton = UIButton(type: .system)
     private let voiceCallButton = UIButton(type: .system)
+    
+    private let photosCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.minimumLineSpacing = 10
+        layout.itemSize = CGSize(width: 80, height: 80)
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.showsHorizontalScrollIndicator = false
+        return cv
+    }()
     
     private let infoFooterLabel = UILabel()
 
@@ -147,6 +159,10 @@ final class PublisherDetailViewController: UIViewController {
         descLabel.numberOfLines = 0
         contentView.addSubview(descLabel)
         
+        photosCollectionView.delegate = self
+        photosCollectionView.dataSource = self
+        photosCollectionView.register(PhotoCell.self, forCellWithReuseIdentifier: "PhotoCell")
+        
         // Action Buttons
         bottomActionStack.axis = .horizontal
         bottomActionStack.spacing = 16
@@ -169,6 +185,9 @@ final class PublisherDetailViewController: UIViewController {
         infoFooterLabel.numberOfLines = 2
         infoFooterLabel.textAlignment = .center
         contentView.addSubview(infoFooterLabel)
+        
+        // Galeriyi ana view'a ekliyoruz ki resmin üstünde kalsın
+        view.addSubview(photosCollectionView)
     }
     
     private func setupActionButton(_ button: UIButton, title: String, icon: String) {
@@ -263,8 +282,17 @@ final class PublisherDetailViewController: UIViewController {
             make.bottom.equalTo(infoFooterLabel.snp.top).offset(-12)
             make.leading.trailing.equalToSuperview().inset(20)
             make.height.equalTo(48)
+            make.top.greaterThanOrEqualTo(descLabel.snp.bottom).offset(30)
+        }
+
+        photosCollectionView.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(12)
+            make.bottom.equalTo(contentView.snp.top).offset(-12)
+            make.trailing.equalToSuperview().inset(12)
+            make.height.equalTo(70)
         }
     }
+    
 
     // MARK: - Configure Data
     private func configureData() {
@@ -283,6 +311,7 @@ final class PublisherDetailViewController: UIViewController {
         
         if let urlStr = profile.profilePic, let url = URL(string: urlStr) {
             backgroundImageView.kf.setImage(with: url)
+            currentSelectedUrl = urlStr
         } else {
             backgroundImageView.backgroundColor = .lightGray
             backgroundImageView.image = UIImage(systemName: "person.crop.rectangle.fill")
@@ -315,6 +344,33 @@ final class PublisherDetailViewController: UIViewController {
         }
         
         tagsStackView.addArrangedSubview(container)
+    }
+
+    // MARK: - Photo Cell
+    final class PhotoCell: UICollectionViewCell {
+        private let imageView = UIImageView()
+        
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            imageView.contentMode = .scaleAspectFill
+            imageView.layer.cornerRadius = 10
+            imageView.clipsToBounds = true
+            imageView.backgroundColor = .systemGray6
+            
+            contentView.addSubview(imageView)
+            imageView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        }
+        required init?(coder: NSCoder) { fatalError() }
+        
+        func configure(with urlString: String, isSelected: Bool) {
+            if let url = URL(string: urlString) {
+                imageView.kf.setImage(with: url)
+            }
+            contentView.layer.borderWidth = isSelected ? 3 : 0
+            contentView.layer.borderColor = UIColor.systemPink.cgColor
+            contentView.layer.cornerRadius = 10
+            contentView.clipsToBounds = true
+        }
     }
 
     // MARK: - Actions
@@ -351,6 +407,36 @@ final class PublisherDetailViewController: UIViewController {
     }
 }
 
+// MARK: - CollectionView Delegate & DataSource
+extension PublisherDetailViewController: UICollectionViewDelegate, UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return profile.photos?.count ?? 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PhotoCell", for: indexPath) as! PhotoCell
+        if let url = profile.photos?[indexPath.item] {
+            let isSelected = (url == currentSelectedUrl)
+            cell.configure(with: url, isSelected: isSelected)
+        }
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let urlString = profile.photos?[indexPath.item], let url = URL(string: urlString) else { return }
+        
+        currentSelectedUrl = urlString
+        
+        // Ana resmi değiştir
+        UIView.transition(with: backgroundImageView, duration: 0.3, options: .transitionCrossDissolve) {
+            self.backgroundImageView.kf.setImage(with: url)
+        }
+        
+        // Çerçeveyi güncelle
+        collectionView.reloadData()
+    }
+}
+
 extension PublisherDetailViewController: PublisherActionSheetDelegate {
     
     func didTapAddToFavorites() {
@@ -380,11 +466,25 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
     }
     
     func didTapBlock() {
-        print("Block tapped")
+        guard let publisherId = profile.id, let publisherName = profile.name else { return }
+        
+        FirestoreService.shared.blockUser(targetId: publisherId, targetName: publisherName) { [weak self] error in
+            DispatchQueue.main.async {
+                if error == nil {
+                    self?.showAutoDismissAlert(title: "Engellendi", message: "\(publisherName) başarıyla engellendi.", duration: 2.0)
+                    // Engelledikten sonra detay ekranından çıkalım
+                    self?.navigationController?.popViewController(animated: true)
+                } else {
+                    self?.showAutoDismissAlert(title: "Hata", message: "Engelleme işlemi başarısız oldu.", duration: 2.0)
+                }
+            }
+        }
     }
     
     func didTapReport() {
         print("Report tapped")
+        
+        
     }
     
     private func checkIfFavorited() {
@@ -399,4 +499,8 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
             }
         }
     }
+}
+
+#Preview {
+    PublisherDetailViewController(profile: .mock).asPreview()
 }

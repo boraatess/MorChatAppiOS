@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import SwiftUI
 
 class BuyTokenViewController: UIViewController {
     
@@ -103,11 +104,18 @@ extension BuyTokenViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView,
                    didSelectRowAt indexPath: IndexPath) {
-       
+        let package = packages[indexPath.row]
+        print("🛒 Buying package: \(package.title)")
+        CoinManager.shared.buyProduct(productId: package.productId)
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 100
     }
+    
+}
+
+#Preview {
+    BuyTokenViewController().asPreview()
     
 }

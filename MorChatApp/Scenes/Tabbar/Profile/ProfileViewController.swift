@@ -9,7 +9,7 @@ import UIKit
 import SnapKit
 import FirebaseAuth
 import FirebaseCore
-
+import SwiftUI
 
 final class ProfileViewController: BaseVC {
 
@@ -67,8 +67,6 @@ final class ProfileViewController: BaseVC {
         super.viewDidAppear(animated)
         
         updateHeader()
-        
-        
     }
     
     private func loadSavedInterests() {
@@ -260,6 +258,8 @@ extension ProfileViewController: UITableViewDataSource {
         case .tokens:
             let cell = tableView.dequeueReusableCell(withIdentifier: TokenCell.identifier, for: indexPath) as! TokenCell
             cell.output = self
+            let coins = currentUser?.creditCount ?? 0
+            cell.configure(coins: coins)
             
             return cell
             
@@ -300,8 +300,27 @@ extension ProfileViewController: UITableViewDelegate {
 
         tableView.deselectRow(at: indexPath, animated: true)
 
-        guard let section = AccountSection(rawValue: indexPath.section),
-              section == .menu else { return }
+        guard let section = AccountSection(rawValue: indexPath.section) else { return }
+
+        if section == .freeToken {
+            print("🎬 Rewarded Ad requested...")
+            CoinManager.shared.showRewardedAd(from: self) { [weak self] success in
+                if success {
+                    print("💎 User earned tokens from ad!")
+                    DispatchQueue.main.async {
+                        self?.fetchProfile() // Refresh coin balance
+                        self?.showAlert(title: "Tebrikler! 💎", message: "Ödüllü reklamı izlediğiniz için hesabınıza jeton eklendi. Keyifli sohbetler dileriz!")
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self?.showAlert(title: "Hata", message: "Reklam şu an yüklenemedi veya yarıda kesildi. Lütfen daha sonra tekrar deneyin.")
+                    }
+                }
+            }
+            return
+        }
+
+        guard section == .menu else { return }
 
         let item = AccountMenuItem.allCases[indexPath.row]
 
@@ -321,6 +340,8 @@ extension ProfileViewController: UITableViewDelegate {
             
         case .blocked:
             print("Blocked")
+            let vc = BlockedUsersVC()
+            self.goToScene(vc)
         case .settings:
             print("Settings")
             let vc = SettingsViewController()
@@ -382,7 +403,8 @@ extension ProfileViewController: InterestsSelectionDelegate {
                 interests: tagNames,
                 tagList: tagIndices,
                 age: user.age,
-                status: user.status
+                status: user.status,
+                blockedPublisherList: user.blockedPublisherList
             )
             FirestoreService.shared.saveUserProfile(user: userModel) { error in
                 if let error = error {
@@ -403,11 +425,44 @@ extension ProfileViewController: ProfileTableHeaderViewDelegate, UIImagePickerCo
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        if let editedImage = info[.editedImage] as? UIImage {
-            if let header = tableView.tableHeaderView as? ProfileTableHeaderView {
-                header.setProfileImage(editedImage)
+        picker.dismiss(animated: true) // Picker'ı hemen kapatıyoruz
+        
+        guard let editedImage = info[.editedImage] as? UIImage,
+              let uid = Auth.auth().currentUser?.uid else { return }
+        
+        // 1. Loading göster
+        self.showLoading()
+        
+        // 2. Storage'a yükle
+        StorageService.shared.uploadProfileImage(uid: uid, image: editedImage) { [weak self] result in
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(let downloadURL):
+                // 3. Firestore'u güncelle
+                FirestoreService.shared.updateProfileImageURL(uid: uid, url: downloadURL) { error in
+                    self.hideLoading()
+                    if let error = error {
+                        self.showAlert(title: "Hata", message: "Profil güncellenemedi: \(error.localizedDescription)")
+                    } else {
+                        // 4. UI'ı güncelle
+                        if let header = self.tableView.tableHeaderView as? ProfileTableHeaderView {
+                            header.setProfileImage(editedImage)
+                        }
+                        self.showAlert(title: "Başarılı", message: "Profil fotoğrafınız güncellendi.")
+                    }
+                }
+                
+            case .failure(let error):
+                self.hideLoading()
+                self.showAlert(title: "Hata", message: "Fotoğraf yüklenemedi: \(error.localizedDescription)")
             }
         }
-        picker.dismiss(animated: true)
     }
 }
+
+#Preview {
+    ProfileViewController().asPreview()
+    
+}
+

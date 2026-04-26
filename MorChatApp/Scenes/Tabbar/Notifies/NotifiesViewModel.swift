@@ -33,11 +33,16 @@ final class NotifiesViewModel: NotifiesViewModelInputProtocol {
     }
     
     func selectNotification(at index: Int) {
-        guard index < notifications.count else { return }
+        guard index < notifications.count else { 
+            print("⚠️ Notifications: Geçersiz index: \(index)")
+            return 
+        }
         let notification = notifications[index]
         
+        print("🔍 Notifications: Bildirime tıklandı. İçerik: \(notification)")
+        
         // If it's a call-related notification, navigate to Call Screen
-        if let callId = notification.callId {
+        if let callId = notification.callId, !callId.isEmpty {
             let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
             
             // Map notification metadata to a profile for the CallViewController
@@ -56,13 +61,19 @@ final class NotifiesViewModel: NotifiesViewModelInputProtocol {
                 point: 0,
                 profilePic: notification.image,
                 status: "Online",
-                interests: [],
-                tagList: []
+                tagList: [],
+                photos: [], blockedWatcherList: [[:]]
             )
             
-            print("👉 Notifications: Bildirim seçildi. Hedef Kişi ID: \(otherPersonId ?? "nil"), Arama ID: \(callId)")
+            print("👉 Notifications: Yönlendirme yapılıyor. Hedef ID: \(otherPersonId ?? "nil"), Arama ID: \(callId)")
+            
+            if output == nil {
+                print("❌ Notifications: HATA! ViewModel Output'u nil, ViewController'a haber verilemiyor.")
+            }
             
             output?.didSelectCallRoom(profile: tempProfile, isVideo: !(notification.isVoiceOnly ?? false), callId: callId)
+        } else {
+            print("⚠️ Notifications: Seçilen bildirimde 'callId' bulunamadı, yönlendirme iptal edildi.")
         }
     }
     

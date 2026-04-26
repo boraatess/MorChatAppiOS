@@ -8,12 +8,13 @@
 import Foundation
 import UIKit
 import SnapKit
-
+import SwiftUI
 
 final class SettingsViewController: UIViewController {
     
     private let tableView = UITableView(frame: .zero, style: .grouped)
     private var items: [SettingItem] = []
+    private var sectionSettings: [SectionSettings] = []
     let viewModel = SettingsViewModel()
     private let profileHeader = ProfileHeaderView()
     
@@ -21,6 +22,7 @@ final class SettingsViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        viewModel.fetchItems()
     }
 
     override func viewDidLoad() {
@@ -30,6 +32,12 @@ final class SettingsViewController: UIViewController {
         viewModel.output = self
         viewModel.fetchItems()
         setupUI()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+    }
+    
+    @objc private func appWillEnterForeground() {
+        viewModel.fetchItems()
     }
     
     private func setupUI() {
@@ -40,7 +48,7 @@ final class SettingsViewController: UIViewController {
         profileHeader.snp.makeConstraints { make in
             make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
             make.leading.trailing.equalToSuperview()
-            make.height.equalTo(30)
+            make.height.equalTo(50)
         }
         
         view.addSubview(tableView)
@@ -69,6 +77,15 @@ extension SettingsViewController: ProfileHeaderViewDelegate {
 }
 
 extension SettingsViewController: SettingsViewOutputProtocol {
+    
+    func configureSectionItems(_ items: [SectionSettings]) {
+        self.sectionSettings = items
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+            
+        }
+    }
+    
     func configureItems(_ items: [SettingItem]) {
         self.items = items
         DispatchQueue.main.async {
@@ -80,9 +97,13 @@ extension SettingsViewController: SettingsViewOutputProtocol {
 
 extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
     
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return sectionSettings.count
+    }
+    
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {
-        items.count
+        return sectionSettings[section].items.count
     }
     
     func tableView(_ tableView: UITableView,
@@ -93,34 +114,94 @@ extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
             for: indexPath
         ) as! SettingTableViewCell
         
-        cell.configure(with: items[indexPath.row])
+        let item = sectionSettings[indexPath.section].items[indexPath.row]
+        
+        cell.configure(with: item)
         
         cell.toggleChanged = { isOn in
-            print("Switch changed:", isOn)
+            if indexPath.section == 0 && indexPath.row == 0 {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
         }
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView,
-                   didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        let headerView = UIView(frame: CGRect(x: 0, y: 0, width: tableView.frame.width, height: 40))
+        headerView.backgroundColor = .clear
         
-        let item = items[indexPath.row]
+        let label = UILabel(frame: CGRect(x: 16, y: 16, width: headerView.frame.width, height: 20))
+        label.textColor = .black
+        label.numberOfLines = 0
+        
+        let section = sectionSettings[section]
+        label.text = section.title
+        label.font = .boldSystemFont(ofSize: 20)
+        headerView.addSubview(label)
+    
+        return headerView
+    }
+ 
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        let section = sectionSettings[indexPath.section]
+        let item = section.items[indexPath.row]
         
         switch item.type {
         case .normal:
-            print("Navigate to document")
-            
             let docUrl = item.docUrl
             let screenTitle = item.title
             if docUrl != "" {
                 let vc = TermsWebViewController(urlString: docUrl, pageTitle: screenTitle)
                 self.navigationController?.pushViewController(vc, animated: true)
-                
             }
+            
+        case .actionSheet:
+            showLanguageSelection()
             
         case .toggle:
             break
         }
     }
+    
+    private func showLanguageSelection() {
+        let alert = UIAlertController(title: "Language", message: nil, preferredStyle: .actionSheet)
+        
+        // Derleyici hatasını önlemek için tipi açıkça belirtiyoruz
+        let languages: [(name: String, code: String)] = [
+            ("Türkçe", "tr"),
+            ("English", "en"),
+            ("Français", "fr"),
+            ("Deutsch", "de"),
+            ("Italiano", "it")
+        ]
+        
+        for (name, code) in languages {
+            alert.addAction(UIAlertAction(title: name, style: .default, handler: { [weak self] _ in
+                LocalizationManager.shared.currentLanguage = code
+                self?.viewModel.fetchItems() 
+                self?.profileHeader.configure(with: "menu_settings".localized, image: "")
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        return 50
+    }
+    
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        return 0.1
+    }
+    
+}
+
+#Preview {
+    let vc = SettingsViewController()
+    return UINavigationController(rootViewController: vc).asPreview()
 }

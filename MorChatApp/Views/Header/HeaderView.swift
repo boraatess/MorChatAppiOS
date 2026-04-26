@@ -17,6 +17,8 @@ final class HeaderView: UIView {
 
     weak var output: HeaderViewOutput?
 
+    private var creditCount: Int = 0
+    
     // MARK: - UI
     private let logoLabel: UILabel = {
         let label = UILabel()
@@ -53,7 +55,7 @@ final class HeaderView: UIView {
         iv.contentMode = .scaleAspectFit
         return iv
     }()
-
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)

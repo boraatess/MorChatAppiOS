@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import SwiftUI
 
 struct RuleItem {
     let icon: UIImage?
@@ -20,13 +21,9 @@ struct RuleItem {
 final class AppRulesViewController: UIViewController {
     
     private let tableView = UITableView(frame: .zero, style: .plain)
-    
     private var rules: [RuleItem] = []
-    
     let viewModel = AppRulesViewModel()
-    
     private let profileHeader = ProfileHeaderView()
-    
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -45,12 +42,12 @@ final class AppRulesViewController: UIViewController {
     private func setupUI() {
         
         title = "menu_rules".localized
-        view.backgroundColor = UIColor.systemGroupedBackground
+        view.backgroundColor = UIColor.white
         
         view.addSubview(profileHeader)
 
         profileHeader.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+            make.top.equalTo(view.safeAreaLayoutGuide)
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(30)
             
@@ -99,13 +96,11 @@ extension AppRulesViewController: AppRulesViewModelOutputprotocol {
 
 extension AppRulesViewController: UITableViewDelegate, UITableViewDataSource {
     
-    func tableView(_ tableView: UITableView,
-                   numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         rules.count
     }
     
-    func tableView(_ tableView: UITableView,
-                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(
             withIdentifier: AppRulesCell.identifier,
             for: indexPath
@@ -114,4 +109,9 @@ extension AppRulesViewController: UITableViewDelegate, UITableViewDataSource {
         cell.configure(with: rules[indexPath.row])
         return cell
     }
+}
+
+#Preview {
+    AppRulesViewController().asPreview()
+    
 }

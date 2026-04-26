@@ -18,6 +18,10 @@ protocol FirestoreServiceProtocol {
     func fetchPublisherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void)
     func listenPublisherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) -> ListenerRegistration?
     func fetchPublisherTags(completion: @escaping (Result<[TagModel], Error>) -> Void)
+    func blockUser(targetId: String, targetName: String, completion: @escaping (Error?) -> Void)
+    func unblockUser(targetId: String, targetName: String, completion: @escaping (Error?) -> Void)
+    func addCoins(amount: Int, completion: @escaping (Error?) -> Void)
+    func deductCoins(amount: Int, completion: @escaping (Error?) -> Void)
 }
 
 
@@ -78,8 +82,9 @@ class FirestoreService: FirestoreServiceProtocol {
         let point = data["point"] as? Int
         let profilePic = data["profilePic"] as? String
         let status = data["status"] as? String
+        let photos = data["photos"] as? [String]
         let tagList = data["tagList"] as? [Int]
-        let interests = data["interests"] as? [String] ?? []
+        let blockedWatcherList = data["blockedWatcherList"] as? [[String: String]]
         
         return PublisherProfile(
             id: id,
@@ -94,8 +99,9 @@ class FirestoreService: FirestoreServiceProtocol {
             point: point,
             profilePic: profilePic,
             status: status,
-            interests: interests,
-            tagList: tagList
+            tagList: tagList,
+            photos: photos,
+            blockedWatcherList: blockedWatcherList
         )
     }
 
@@ -124,9 +130,10 @@ class FirestoreService: FirestoreServiceProtocol {
             let point = data["point"] as? Int
             let profilePic = data["profilePic"] as? String
             let status = data["status"] as? String
+            let photos = data["photos"] as? [String]
             let tagList = data["tagList"] as? [Int]
-            let interests = data["interests"] as? [String] ?? []
-            
+            let blockedWatcherList = data["blockedWatcherList"] as? [[String: String]]
+
             let profile = PublisherProfile(
                 id: id,
                 about: about,
@@ -140,8 +147,9 @@ class FirestoreService: FirestoreServiceProtocol {
                 point: point,
                 profilePic: profilePic,
                 status: status,
-                interests: interests,
-                tagList: tagList
+                tagList: tagList,
+                photos: photos,
+                blockedWatcherList: blockedWatcherList
             )
             completion(.success(profile))
         }
@@ -221,18 +229,16 @@ class FirestoreService: FirestoreServiceProtocol {
     }
 
     
+    func updateProfileImageURL(uid: String, url: String, completion: @escaping (Error?) -> Void) {
+        db.collection("UserWatcher").document(uid).updateData([
+            "profileImage": url
+        ]) { error in
+            completion(error)
+        }
+    }
+    
     func saveUserProfile(user: UserModel, completion: @escaping (Error?) -> Void) {
-        var dict: [String: Any] = [
-            "id": user.uid,
-            "name": user.name ?? "",
-            "email": user.email ?? "",
-            "profileImage": user.photoURL ?? "",
-            "createdAt": user.createdAt,
-            "interests": user.interests ?? [],
-            "tagList": user.tagList ?? [],
-            "age": user.age ?? 0,
-            "status": user.status ?? "Online"
-        ]
+        var dict = user.dictionary
         
         if let currentFCM = UserDefaults.standard.string(forKey: "fcm_token") {
             dict["msgToken"] = currentFCM
@@ -261,8 +267,8 @@ class FirestoreService: FirestoreServiceProtocol {
             "point": profile.point ?? 0,
             "profilePic": profile.profilePic ?? "",
             "status": profile.status ?? "Online",
-            "interests": profile.interests ?? [],
-            "tagList": profile.tagList ?? []
+            "tagList": profile.tagList ?? [],
+            "photos": profile.photos ?? []
         ]
         
         if let currentFCM = UserDefaults.standard.string(forKey: "fcm_token") {
@@ -308,8 +314,38 @@ class FirestoreService: FirestoreServiceProtocol {
             let tagList = data["tagList"] as? [Int] ?? []
             let age = data["age"] as? Int ?? 0
             let status = data["status"] as? String ?? "Online"
+            let blockedPublisherList = data["blockedPublisherList"] as? [[String: String]]
             
-            let user = UserModel(uid: uid, name: name, email: email, photoURL: photoURL, createdAt: createdAt, interests: interests, tagList: tagList, age: age, status: status)
+            // New fields from snapshot
+            let creditCount = data["creditCount"] as? Int ?? 0
+            let adsWatchedTotal = data["adsWatchedTotal"] as? Int ?? 0
+            let calledPublisherId = data["calledPublisherId"] as? String
+            let isOnline = data["isOnline"] as? Bool ?? true
+            let language = data["language"] as? String ?? "tr"
+            let lastAdWatchedTime = data["lastAdWatchedTime"] as? Int64
+            let phone = data["phone"] as? String
+            let msgToken = data["msgToken"] as? String
+            
+            let user = UserModel(
+                uid: uid,
+                name: name,
+                email: email,
+                photoURL: photoURL,
+                createdAt: createdAt,
+                interests: interests,
+                tagList: tagList,
+                age: age,
+                status: status,
+                blockedPublisherList: blockedPublisherList,
+                creditCount: creditCount,
+                adsWatchedTotal: adsWatchedTotal,
+                calledPublisherId: calledPublisherId,
+                isOnline: isOnline,
+                language: language,
+                lastAdWatchedTime: lastAdWatchedTime,
+                phone: phone,
+                msgToken: msgToken
+            )
             completion(.success(user))
         }
     }
@@ -357,7 +393,30 @@ class FirestoreService: FirestoreServiceProtocol {
                 let age = (data["age"] as? Int) ?? (data["yaş"] as? Int) ?? (data["userAge"] as? Int) ?? 0
                 let status = (data["status"] as? String) ?? (data["durum"] as? String) ?? "Online"
                 
-                return UserModel(uid: uid, name: name, email: email, photoURL: photoURL, createdAt: createdAt, interests: interests, tagList: tagList, age: age, status: status)
+                // Extra fields for robustness
+                let creditCount = data["creditCount"] as? Int ?? 0
+                let adsWatchedTotal = data["adsWatchedTotal"] as? Int ?? 0
+                
+                return UserModel(
+                    uid: uid,
+                    name: name,
+                    email: email,
+                    photoURL: photoURL,
+                    createdAt: createdAt,
+                    interests: interests,
+                    tagList: tagList,
+                    age: age,
+                    status: status,
+                    blockedPublisherList: nil,
+                    creditCount: creditCount,
+                    adsWatchedTotal: adsWatchedTotal,
+                    calledPublisherId: data["calledPublisherId"] as? String,
+                    isOnline: data["isOnline"] as? Bool ?? true,
+                    language: data["language"] as? String ?? "tr",
+                    lastAdWatchedTime: data["lastAdWatchedTime"] as? Int64,
+                    phone: data["phone"] as? String,
+                    msgToken: data["msgToken"] as? String
+                )
             } ?? []
             
             completion(.success(users))
@@ -415,6 +474,42 @@ class FirestoreService: FirestoreServiceProtocol {
         }
     }
     
+    func blockUser(targetId: String, targetName: String, completion: @escaping (Error?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        let myCollection = (userType == "guide") ? "PublisherProfile" : "UserWatcher"
+        let listName = (userType == "guide") ? "blockedWatcherList" : "blockedPublisherList"
+        
+        let blockData: [String: Any] = [
+            "id": targetId,
+            "name": targetName
+        ]
+        
+        db.collection(myCollection).document(uid).updateData([
+            listName: FieldValue.arrayUnion([blockData])
+        ]) { error in
+            completion(error)
+        }
+    }
+    
+    func unblockUser(targetId: String, targetName: String, completion: @escaping (Error?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        let myCollection = (userType == "guide") ? "PublisherProfile" : "UserWatcher"
+        let listName = (userType == "guide") ? "blockedWatcherList" : "blockedPublisherList"
+        
+        let blockData: [String: Any] = [
+            "id": targetId,
+            "name": targetName
+        ]
+        
+        db.collection(myCollection).document(uid).updateData([
+            listName: FieldValue.arrayRemove([blockData])
+        ]) { error in
+            completion(error)
+        }
+    }
+    
     // Fetch notifications for Watcher (User)
     func fetchWatcherNotifications(completion: @escaping (Result<[NotificationModel], Error>) -> Void) {
         db.collection("NotificationListWatcher").getDocuments { snapshot, error in
@@ -468,7 +563,7 @@ class FirestoreService: FirestoreServiceProtocol {
             // Eğer liste boşsa buraları kontrol edeceğiz:
             print("📄 DocID: \(id) | pId: \(pId ?? "nil") | wId: \(wId ?? "nil") | name: \(data["name"] ?? "nil")")
             
-            let callId = data["callId"] as? String
+            let callId = (data["callId"] as? String) ?? (data["callID"] as? String)
             let image = data["image"] as? String
             let isVoiceOnly = data["isVoiceOnly"] as? Bool
             let name = data["name"] as? String
@@ -494,6 +589,24 @@ class FirestoreService: FirestoreServiceProtocol {
         } ?? []
         
         completion(.success(notifications))
+    }
+    
+    func addCoins(amount: Int, completion: @escaping (Error?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("UserWatcher").document(uid).updateData([
+            "creditCount": FieldValue.increment(Int64(amount))
+        ]) { error in
+            completion(error)
+        }
+    }
+    
+    func deductCoins(amount: Int, completion: @escaping (Error?) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("UserWatcher").document(uid).updateData([
+            "creditCount": FieldValue.increment(Int64(-amount))
+        ]) { error in
+            completion(error)
+        }
     }
 }
 

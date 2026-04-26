@@ -34,37 +34,96 @@ final class SignalingClient {
     // MARK: - Caller Flow
     func createCall(receiverId: String, isVideo: Bool, completion: @escaping (String) -> Void) {
         guard let callerId = Auth.auth().currentUser?.uid else { return }
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
         
         print("📞 Arama Başlatılıyor...")
-        print("📞 Arayan (Kimliğim): \(callerId)")
-        print("📞 Aranan (Karşı Taraf): \(receiverId)")
         
         let callDoc = db.collection("Calls").document()
-        self.callId = callDoc.documentID
+        let roomId = callDoc.documentID
+        self.callId = roomId
 
-        let callData: [String: Any] = [
-            "callerId": callerId,
-            "receiverId": receiverId,
-            "status": "ringing",
-            "type": isVideo ? "video" : "voice",
-            "createdAt": FieldValue.serverTimestamp()
-        ]
+        // 1. Önce her iki tarafın bilgilerini toplayalım
+        fetchCallParticipantsInfo(callerId: callerId, receiverId: receiverId, userType: userType) { participantsData in
+            
+            var callData: [String: Any] = participantsData
+            callData["roomId"] = roomId
+            callData["status"] = "ringing"
+            callData["isCall"] = true
+            callData["isVoiceOnly"] = !isVideo
+            callData["type"] = isVideo ? "video" : "voice"
+            callData["timestamp"] = FieldValue.serverTimestamp()
+            callData["createdAt"] = FieldValue.serverTimestamp() // Eski uyumluluk için
 
-        callDoc.setData(callData) { [weak self] error in
-            guard let self = self else { return }
-            if error == nil {
-                // 🔥 Arama kaydı oluşturulduğunda bildirimi de patlatalım
-                self.createNotificationLog(callId: self.callId, receiverId: receiverId, isVideo: isVideo)
-                completion(self.callId)
+            callDoc.setData(callData) { [weak self] error in
+                guard let self = self else { return }
+                if error == nil {
+                    // Karşı tarafın bildirim listesine döküman yaz
+                    self.createNotificationLog(callId: roomId, receiverId: receiverId, isVideo: isVideo)
+                    completion(roomId)
+                }
             }
         }
 
-        // Sadece durum takibi yapıyoruz
+        // Durum takibi
         listener = callDoc.addSnapshotListener { [weak self] snapshot, _ in
             guard let self = self, let data = snapshot?.data() else { return }
             if let status = data["status"] as? String {
                 self.delegate?.signalingClient(self, didChangeStatus: status)
             }
+        }
+    }
+
+    private func fetchCallParticipantsInfo(callerId: String, receiverId: String, userType: String, completion: @escaping ([String: Any]) -> Void) {
+        let myCollection = (userType == "guide") ? "PublisherProfile" : "UserWatcher"
+        let otherCollection = (userType == "guide") ? "UserWatcher" : "PublisherProfile"
+        
+        var resultData: [String: Any] = [
+            "callerId": callerId,
+            "calleeId": receiverId
+        ]
+        
+        let group = DispatchGroup()
+        
+        // Kendi bilgilerimi çek (Arayan)
+        group.enter()
+        db.collection(myCollection).document(callerId).getDocument { snapshot, _ in
+            if let data = snapshot?.data() {
+                let name = data["name"] as? String ?? ""
+                resultData["callerName"] = name
+                // Eğer ben publisher isem
+                if userType == "guide" {
+                    resultData["publisherId"] = callerId
+                    resultData["publisherName"] = name
+                    resultData["publisherImage"] = (data["profilePic"] as? String) ?? ""
+                } else {
+                    resultData["watcherId"] = callerId
+                    resultData["watcherName"] = name
+                }
+            }
+            group.leave()
+        }
+        
+        // Karşı tarafın bilgilerini çek (Aranan)
+        group.enter()
+        db.collection(otherCollection).document(receiverId).getDocument { snapshot, _ in
+            if let data = snapshot?.data() {
+                let name = data["name"] as? String ?? ""
+                resultData["calledUserName"] = name
+                // Eğer karşı taraf publisher ise
+                if userType == "user" {
+                    resultData["publisherId"] = receiverId
+                    resultData["publisherName"] = name
+                    resultData["publisherImage"] = (data["profilePic"] as? String) ?? ""
+                } else {
+                    resultData["watcherId"] = receiverId
+                    resultData["watcherName"] = name
+                }
+            }
+            group.leave()
+        }
+        
+        group.notify(queue: .main) {
+            completion(resultData)
         }
     }
 

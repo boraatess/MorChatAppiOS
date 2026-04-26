@@ -11,7 +11,7 @@ final class LoginBackgroundView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         // Match the deep purple background of the mockup
-        self.backgroundColor = UIColor(red: 0.43, green: 0.11, blue: 0.66, alpha: 1.0)
+        self.backgroundColor = .appPurple
         setupBackgroundTags()
     }
     

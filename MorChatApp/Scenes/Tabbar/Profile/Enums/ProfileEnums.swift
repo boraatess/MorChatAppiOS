@@ -47,6 +47,7 @@ enum AccountMenuItem: CaseIterable {
 enum SettingItemType {
     case toggle(isOn: Bool)
     case normal
+    case actionSheet
 }
 
 struct SettingItem {
@@ -55,4 +56,9 @@ struct SettingItem {
     let subtitle: String
     let docUrl: String
     let type: SettingItemType
+}
+
+struct SectionSettings {
+    let title: String
+    let items: [SettingItem]
 }

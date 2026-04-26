@@ -108,12 +108,17 @@ final class TokenCell: UITableViewCell {
     }
     
     
-    @objc func buyTokenTapped() {
-        
-        self.output?.buyToken()
-        
-        
+    func configure(coins: Int) {
+        titleLabel.text = "Jetonlarım: \(coins)"
+        if coins > 0 {
+            descLabel.text = "Sohbetlerinize devam etmek için yeterli jetonunuz var."
+        } else {
+            descLabel.text = "Jetonunuz kalmadı. Şimdi yükleyin ve sohbete kaldığınız yerden devam edin..."
+        }
     }
     
+    @objc func buyTokenTapped() {
+        self.output?.buyToken()
+    }
 }
 

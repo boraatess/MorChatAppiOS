@@ -110,14 +110,16 @@ class HomeViewModel: HomeViewModelInputprotocol {
             
             let isOnline = (profile.status == "Online" || profile.status == "Çevrimiçi")
             let tagNames = profile.tagList?.compactMap { self.availableTags[safe: $0] } ?? []
+            let tagIds = profile.tagList ?? []
             
             return UserCardModel(
                 name: profile.name ?? "İsimsiz",
                 age: profile.age,
                 imageURL: profile.profilePic,
                 status: isOnline ? "Online" : "Away",
-                tags: tagNames,
-                profile: profile   // 🔥 EN KRİTİK SATIR
+                tags: tagIds,         // [Int] ID Listesi
+                interests: tagNames,  // [String] İsim Listesi
+                profile: profile      // 🔥 EN KRİTİK SATIR
             )
         }
         

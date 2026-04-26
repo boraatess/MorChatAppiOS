@@ -5,6 +5,13 @@ final class ProfileMenuCell: UITableViewCell {
     
     static let identifier = "ProfileMenuCell"
     
+    private let containerView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 8
+        view.backgroundColor = .clear
+        return view
+    }()
+    
     private let iconImageView: UIImageView = {
         let iv = UIImageView()
         iv.tintColor = .white
@@ -39,6 +46,22 @@ final class ProfileMenuCell: UITableViewCell {
     
     required init?(coder: NSCoder) { fatalError() }
     
+    /*     contentView.addSubview(containerView)
+     
+     containerView.snp.makeConstraints { make in
+         make.top.equalToSuperview().offset(4)
+         make.leading.equalToSuperview().offset(4)
+         make.trailing.equalToSuperview().inset(4)
+         make.bottom.equalToSuperview().inset(4)
+     }
+     
+     containerView.addSubview(iconImageView)
+     containerView.addSubview(titleLabel)
+     containerView.addSubview(arrowImageView)
+     containerView.addSubview(separatorView)
+     
+     */
+    
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
@@ -49,13 +72,13 @@ final class ProfileMenuCell: UITableViewCell {
         contentView.addSubview(separatorView)
         
         iconImageView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
+            make.leading.equalTo(contentView.safeAreaLayoutGuide).offset(20)
             make.centerY.equalToSuperview()
-            make.size.equalTo(20)
+            make.size.equalTo(24)
         }
         
         titleLabel.snp.makeConstraints { make in
-            make.leading.equalTo(iconImageView.snp.trailing).offset(12)
+            make.leading.equalTo(iconImageView.snp.trailing).offset(10)
             make.centerY.equalToSuperview()
         }
         
@@ -66,16 +89,18 @@ final class ProfileMenuCell: UITableViewCell {
         }
         
         separatorView.snp.makeConstraints { make in
-            make.leading.equalTo(titleLabel)
-            make.trailing.equalToSuperview()
+            make.leading.equalTo(contentView.safeAreaLayoutGuide)
+            make.trailing.equalTo(contentView.safeAreaLayoutGuide)
             make.bottom.equalToSuperview()
             make.height.equalTo(1)
         }
+        
     }
     
     func configure(title: String, icon: String, showSeparator: Bool) {
         titleLabel.text = title
         iconImageView.image = UIImage(systemName: icon)
         separatorView.isHidden = !showSeparator
+        
     }
 }

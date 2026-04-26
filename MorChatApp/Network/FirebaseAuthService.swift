@@ -83,7 +83,8 @@ class FirebaseAuthService: FirebaseAuthServiceProtocol {
                                       interests: [],
                                       tagList: [],
                                       age: 0,
-                                      status: "unknown")
+                                      status: "unknown",
+                                      blockedPublisherList: nil)
                 
                 FirestoreService.shared.saveUserProfile(user: user) { _ in
                     UserDefaults.standard.set(true, forKey: "isLogin")
@@ -118,7 +119,8 @@ class FirebaseAuthService: FirebaseAuthServiceProtocol {
                                             interests: [],
                                             tagList: [],
                                             age: 0,
-                                            status: "unknown")
+                                            status: "unknown",
+                                            blockedPublisherList: nil)
                 
                 FirestoreService.shared.saveUserProfile(user: userModel) { _ in
                     UserDefaults.standard.set(true, forKey: "isLogin")

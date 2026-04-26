@@ -32,13 +32,10 @@ final class GuideHomeViewModel {
                     switch tagResult {
                     case .success(let allTags):
                         let guideTagsIDs = profile.tagList ?? []
-                        var guideInterests = profile.interests ?? []
                         
-                        // Fallback: If names are missing for the guide, map them from IDs
-                        if guideInterests.isEmpty && !guideTagsIDs.isEmpty {
-                            guideInterests = guideTagsIDs.compactMap { id in 
-                                allTags.first(where: { $0.id == id })?.name 
-                            }
+                        // Tag ID listesinden Name listesine çevrim yapıyoruz
+                        let guideInterests = guideTagsIDs.compactMap { id in
+                            allTags.first(where: { $0.id == id })?.name
                         }
                         
                         self.fetchAndFilterWatchers(guideTags: guideTagsIDs, guideInterests: guideInterests, allTags: allTags)

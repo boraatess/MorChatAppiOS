@@ -4,6 +4,8 @@ import AgoraRtcKit
 import AVFoundation
 import AudioToolbox
 import AgoraInfra_iOS
+import Firebase
+import FirebaseAuth
 
 
 final class CallViewController: BaseVC {
@@ -117,15 +119,33 @@ final class CallViewController: BaseVC {
     // MARK: - Call Flow
     private func startCallerFlow() {
         guard let receiverId = profile.id else { return }
-        signalingClient.createCall(receiverId: receiverId, isVideo: isVideoCall) { [weak self] callId in
+        
+        // 1. Önce jeton kontrolü yap
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        FirestoreService.shared.fetchUserProfile(uid: uid) { [weak self] result in
             guard let self = self else { return }
-            print("✅ Firestore: Arama oluşturuldu ID: \(callId)")
-            
-            // 🔥 KRİTİK: Agora kanalına bu ID ile katılıyoruz
-            self.agoraManager.joinChannel(channelId: callId)
-            
-            DispatchQueue.main.async {
-                self.playAudio(named: "calling")
+            switch result {
+            case .success(let user):
+                if (user.creditCount ?? 0) < 10 {
+                    self.showAlert(title: "Yetersiz Jeton", message: "Arama yapabilmek için en az 10 jetonunuz olmalı.") {
+                        self.dismiss(animated: true)
+                    }
+                    return
+                }
+                
+                // 2. Jeton varsa aramayı başlat
+                self.signalingClient.createCall(receiverId: receiverId, isVideo: self.isVideoCall) { [weak self] callId in
+                    guard let self = self else { return }
+                    print("✅ Firestore: Arama oluşturuldu ID: \(callId)")
+                    self.agoraManager.joinChannel(channelId: callId)
+                    DispatchQueue.main.async {
+                        self.playAudio(named: "calling")
+                    }
+                }
+                
+            case .failure(let error):
+                print("❌ Jeton kontrolü hatası: \(error.localizedDescription)")
+                self.dismiss(animated: true)
             }
         }
     }
@@ -139,8 +159,6 @@ final class CallViewController: BaseVC {
         view.addSubview(backgroundImageView)
 
         remoteVideoView.backgroundColor = .black
-        remoteVideoView.layer.borderColor = UIColor.green.cgColor // DEBUG
-        remoteVideoView.layer.borderWidth = 2
         view.addSubview(remoteVideoView)
 
         if !isVideoCall {
@@ -151,9 +169,7 @@ final class CallViewController: BaseVC {
 
         if isVideoCall {
             localVideoView.backgroundColor = .darkGray
-            localVideoView.layer.borderColor = UIColor.red.cgColor // DEBUG
-            localVideoView.layer.borderWidth = 2
-            localVideoView.layer.cornerRadius = 16
+            localVideoView.layer.cornerRadius = 8
             localVideoView.clipsToBounds = true
             view.addSubview(localVideoView)
             view.bringSubviewToFront(localVideoView) // En öne getir
@@ -321,6 +337,39 @@ final class CallViewController: BaseVC {
             let m = self.secondsElapsed / 60
             let s = self.secondsElapsed % 60
             self.durationLabel.text = String(format: "%02d:%02d", m, s)
+            
+            // Her dakika başında jeton düş (ilk saniyede değil, 60. saniyede ve katlarında)
+            if self.secondsElapsed > 0 && self.secondsElapsed % 60 == 0 {
+                self.deductCoinsForCall()
+            }
+        }
+    }
+    
+    private func deductCoinsForCall() {
+        // Arayan taraf mı kontrol et (Gelen aramada jeton düşmemeli, sadece arayan düşer - İş modeline göre değişebilir)
+        // Eğer her iki taraf da düşecekse bu kontrolü kaldırın.
+        if incomingCallId != nil { return } 
+        
+        FirestoreService.shared.deductCoins(amount: 10) { [weak self] error in
+            if let error = error {
+                print("❌ Jeton düşme hatası: \(error.localizedDescription)")
+                return
+            }
+            print("💎 10 jeton düşüldü.")
+            
+            // Jeton miktarını kontrol et, eğer bittiyse aramayı sonlandır
+            guard let uid = Auth.auth().currentUser?.uid else { return }
+            FirestoreService.shared.fetchUserProfile(uid: uid) { result in
+                if case .success(let user) = result {
+                    if (user.creditCount ?? 0) < 10 {
+                        DispatchQueue.main.async {
+                            self?.showAlert(title: "Jetonunuz Bitti", message: "Jetonunuz tükendiği için arama sonlandırıldı.") {
+                                self?.endTapped()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

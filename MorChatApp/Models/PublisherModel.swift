@@ -1,6 +1,14 @@
+//
+//  PublisherModel.swift
+//  MorChatApp
+//
+//  Created by bora ateş on 26.04.2026.
+//
+
 import Foundation
 
-struct UserModel {
+
+struct PublisherModel {
     let uid: String
     var name: String?
     let email: String?
@@ -20,7 +28,7 @@ struct UserModel {
     var isOnline: Bool?
     var language: String?
     var lastAdWatchedTime: Int64?
-    var phone: String?
+    var phoneNumber: String?
     var msgToken: String?
     
     // 🔥 Etiketleri TagManager ile okunabilir string'lere (isimlere) çevirir
@@ -52,7 +60,7 @@ struct UserModel {
             "lastAdWatchedTime": lastAdWatchedTime ?? 0
         ]
         
-        if let phone = phone { dict["phone"] = phone }
+        if let phone = phoneNumber { dict["phoneNumber"] = phone }
         if let msgToken = msgToken { dict["msgToken"] = msgToken }
         if let blocked = blockedPublisherList { dict["blockedPublisherList"] = blocked }
         

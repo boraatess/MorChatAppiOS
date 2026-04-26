@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 
 class TabBarViewController: UITabBarController {
@@ -14,17 +15,12 @@ class TabBarViewController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Safe area beyaz arka plan
-        view.backgroundColor = UIColor.black
+        view.backgroundColor = .black
         
-        // Appearance setup
         setupAppearance()
-        
-        // Tab bar controller view controllers
         setupTabBar()
-        
-        // Icon ve title spacing fix (bireysel item üzerinden, SE dahil)
         setupTabBarItemsInsets()
+        
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -33,56 +29,71 @@ class TabBarViewController: UITabBarController {
     
     // MARK: - Appearance
     private func setupAppearance() {
+        
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.black
         
-        appearance.backgroundEffect = nil // blur kapat
+        // 🔥 ARKA PLAN SİYAH
+        appearance.backgroundColor = .black
         appearance.shadowColor = .clear
+        appearance.backgroundEffect = nil
         
-        // Stil uygulama
+        // Stil uygula
         applyStyle(appearance.stackedLayoutAppearance)
         applyStyle(appearance.inlineLayoutAppearance)
         applyStyle(appearance.compactInlineLayoutAppearance)
         
         tabBar.standardAppearance = appearance
+        
         if #available(iOS 15.0, *) {
             tabBar.scrollEdgeAppearance = appearance
         }
         
         tabBar.isTranslucent = false
-        tabBar.backgroundColor = UIColor.black
+        
+        // ❌ ÇAKIŞMA YAPANLAR KALDIRILDI
+        // tabBar.tintColor
+        // tabBar.unselectedItemTintColor
+        // tabBar.barTintColor
+        
     }
     
     private func applyStyle(_ itemAppearance: UITabBarItemAppearance) {
-        itemAppearance.selected.iconColor = UIColor.App.tabbarSelectedColor
+        
+        let selectedColor = UIColor.App.tabbarSelectedColor
+        
+        // ✅ Seçili item
+        itemAppearance.selected.iconColor = selectedColor
         itemAppearance.selected.titleTextAttributes = [
-            .foregroundColor: UIColor.App.tabbarSelectedColor,
-            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+            .foregroundColor: selectedColor,
+            .font: UIFont.systemFont(ofSize: 12, weight: .bold)
         ]
         
-        itemAppearance.normal.iconColor = UIColor.white
+        // ✅ Seçili olmayan item
+        itemAppearance.normal.iconColor = .white
         itemAppearance.normal.titleTextAttributes = [
             .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 10)
+            .font: UIFont.systemFont(ofSize: 12, weight: .regular)
         ]
     }
     
-    // MARK: - Tab bar items spacing (SE ve küçük ekranlar için)
+    // MARK: - Tab bar items spacing
     private func setupTabBarItemsInsets() {
-        guard let items = tabBar.items else { return }
         DispatchQueue.main.async {
+            guard let items = self.tabBar.items else { return }
             for item in items {
                 item.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: -2)
-                item.imageInsets = UIEdgeInsets(top: 6, left: 0, bottom: -6, right: 0)
+                item.imageInsets = UIEdgeInsets(top: 6, left: 8, bottom: -6, right: -8)
             }
         }
     }
     
     // MARK: - Setup Tabs
     private func setupTabBar() {
+        
         let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
         
+        // HOME
         let homeRoot: UIViewController = (userType == "guide") ? GuideHomeViewController() : HomeViewController()
         let homeVC = BaseNavigationController(rootViewController: homeRoot)
         homeVC.navigationBar.isHidden = true
@@ -92,6 +103,7 @@ class TabBarViewController: UITabBarController {
             selectedImage: UIImage(named: "morchat_logo")?.withRenderingMode(.alwaysTemplate)
         )
         
+        // NOTIFICATIONS
         let notifiesController = BaseNavigationController(rootViewController: NotificationsVC())
         notifiesController.navigationBar.isHidden = true
         notifiesController.tabBarItem = UITabBarItem(
@@ -100,30 +112,32 @@ class TabBarViewController: UITabBarController {
             selectedImage: UIImage(named: "notifications")?.withRenderingMode(.alwaysTemplate)
         )
         
-        let profileRoot: UIViewController = ( userType == "guide") ? PublisherProfileVC() : ProfileViewController()
-        
-       // let profileVC = BaseNavigationController(rootViewController: profileRoot)
-        
-        
+        // HISTORY (guide)
         let publicationHistory = BaseNavigationController(rootViewController: PublicationHistoryVC())
         publicationHistory.navigationBar.isHidden = true
-        publicationHistory.tabBarItem = UITabBarItem(title: "History",  image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
-            selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate))
+        publicationHistory.tabBarItem = UITabBarItem(
+            title: "History",
+            image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
+            selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate)
+        )
         
-        
-        let userprofileController = BaseNavigationController(rootViewController: ProfileViewController())
-        userprofileController.navigationBar.isHidden = true
-        userprofileController.tabBarItem = UITabBarItem(
+        // USER PROFILE
+        let userProfileController = BaseNavigationController(rootViewController: ProfileViewController())
+        userProfileController.navigationBar.isHidden = true
+        userProfileController.tabBarItem = UITabBarItem(
             title: "Profile",
             image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate)
         )
         
+        // GUIDE PROFILE
         let publisherProfile = BaseNavigationController(rootViewController: PublisherProfileVC())
         publisherProfile.navigationBar.isHidden = true
-        publisherProfile.tabBarItem = UITabBarItem(title: "My Account", image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate), selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate))
-        
-      
+        publisherProfile.tabBarItem = UITabBarItem(
+            title: "My Account",
+            image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate),
+            selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate)
+        )
         
         if userType == "guide" {
             viewControllers = [
@@ -133,6 +147,7 @@ class TabBarViewController: UITabBarController {
                 publisherProfile
             ]
         } else {
+            // FAVORITES
             let favsController = BaseNavigationController(rootViewController: FavoritesViewController())
             favsController.navigationBar.isHidden = true
             favsController.tabBarItem = UITabBarItem(
@@ -145,11 +160,19 @@ class TabBarViewController: UITabBarController {
                 homeVC,
                 notifiesController,
                 favsController,
-                userprofileController
+                userProfileController
             ]
         }
     }
 }
+
+#Preview {
+    // Navigasyon yapısı içinde göstermek daha stabildir
+    let tabBar = TabBarViewController()
+    return tabBar.asPreview()
+        .ignoresSafeArea()
+}
+
 
 
 /* | Sekme       | SF Symbol                |

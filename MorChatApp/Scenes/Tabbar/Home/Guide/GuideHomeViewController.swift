@@ -1,5 +1,7 @@
+
 import UIKit
 import SnapKit
+import SwiftUI
 
 final class GuideHomeViewController: BaseVC {
     
@@ -82,7 +84,8 @@ extension GuideHomeViewController: UICollectionViewDelegate, UICollectionViewDat
             age: watcher.age,
             imageURL: watcher.photoURL,
             status: watcher.status,
-            tags: watcher.interests ?? [],
+            tags: watcher.tagList ?? [],
+            interests: watcher.interests ?? [],
             profile: nil,
             user: watcher
         )
@@ -128,12 +131,16 @@ extension GuideHomeViewController: UserCardCellDelegate {
             point: 0,
             profilePic: watcher.photoURL,
             status: watcher.status,
-            interests: watcher.interests,
-            tagList: watcher.tagList
+            tagList: watcher.tagList,
+            photos: [], blockedWatcherList: [[:]]
         )
         
         let callVC = CallViewController(profile: profile, isVideoCall: isVideo)
         callVC.modalPresentationStyle = .fullScreen
         self.present(callVC, animated: true)
     }
+}
+
+#Preview {
+    GuideHomeViewController().asPreview()
 }

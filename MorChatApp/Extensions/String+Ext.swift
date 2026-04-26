@@ -2,6 +2,6 @@ import Foundation
 
 extension String {
     var localized: String {
-        return NSLocalizedString(self, comment: "")
+        return LocalizationManager.shared.localizedString(for: self)
     }
 }

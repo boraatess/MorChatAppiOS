@@ -42,5 +42,9 @@
 	<string>$(PRODUCT_NAME) sesli ve görüntülü görüşmelerde sesinizi iletebilmek için mikrofonunuza erişim ister.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>$(PRODUCT_NAME) profil fotoğrafı seçebilmeniz için fotoğraf galerinize erişim ister.</string>
+    <key>GADApplicationIdentifier</key>
+    <string>ca-app-pub-3066798903065241~9105470064</string>
+    
 </dict>
 </plist>
+

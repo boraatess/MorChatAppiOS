@@ -39,21 +39,23 @@ final class FavoritesViewModel: FavoritesViewModelInputProtocol {
                 case .success(let profiles):
                     self?.publisherProfiles = profiles
                     self?.likedUsers = profiles.compactMap { profile in
-
+                        
                         // Convert tagList [Int] indices to tag name strings safely
                         /*
-                        let tagNames: [String]
-                        if let tagList = profile.tagList {
-                            tagNames = tagList.compactMap { index in
-                                guard index >= 0 && index < SharedTagsCloudView.categories.count else { return nil }
-                                return SharedTagsCloudView.categories[index].name
-                            }
-                        } else {
-                            tagNames = []
-                        }
-                        */
+                         let tagNames: [String]
+                         if let tagList = profile.tagList {
+                         tagNames = tagList.compactMap { index in
+                         guard index >= 0 && index < SharedTagsCloudView.categories.count else { return nil }
+                         return SharedTagsCloudView.categories[index].name
+                         }
+                         } else {
+                         tagNames = []
+                         }
+                         */
                         
-                        return UserCardModel(name: profile.name ?? "", age: profile.age, imageURL: profile.profilePic, status: profile.status, tags: profile.interests ?? [], profile: profile)
+                        return UserCardModel(name: profile.name ?? "", age: profile.age, imageURL: profile.profilePic, status: profile.status,
+                                             tags: profile.tagList ?? [0], interests: [], profile: profile)
+                        
                     }
 
                     if let users = self?.likedUsers {

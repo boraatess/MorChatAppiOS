@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SnapKit
+import FirebaseAuth
 
 class BaseVC: UIViewController {
     
@@ -43,6 +44,19 @@ class BaseVC: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        updateHeaderCoins()
+    }
+    
+    func updateHeaderCoins() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        FirestoreService.shared.fetchUserProfile(uid: uid) { [weak self] result in
+            if case .success(let user) = result {
+                DispatchQueue.main.async {
+                    self?.headerView.updateCoinAmount(user.creditCount ?? 0)
+                }
+            }
+        }
     }
     
     func showLoading() {
