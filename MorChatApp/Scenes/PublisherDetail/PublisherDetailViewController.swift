@@ -448,7 +448,8 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
                 DispatchQueue.main.async {
                     if error == nil {
                         self?.isFavorited = false
-                        self?.showAutoDismissAlert(title: "Favorilerden Çıkarıldı", message: "\(self?.profile.name ?? "Yayıncı") favorilerinizden çıkarıldı.", duration: 1.5)
+                        let msg = String(format: "fav_removed_message".localized, self?.profile.name ?? "tab_profile".localized)
+                        self?.showAutoDismissAlert(title: "fav_removed_title".localized, message: msg, duration: 1.5)
                     }
                 }
             }
@@ -458,7 +459,8 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
                 DispatchQueue.main.async {
                     if error == nil {
                         self?.isFavorited = true
-                        self?.showAutoDismissAlert(title: "✅ Favorilere Eklendi", message: "\(self?.profile.name ?? "Yayıncı") favorilerinize eklendi!", duration: 1.5)
+                        let msg = String(format: "fav_added_message".localized, self?.profile.name ?? "tab_profile".localized)
+                        self?.showAutoDismissAlert(title: "fav_added_title".localized, message: msg, duration: 1.5)
                     }
                 }
             }
@@ -471,11 +473,12 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
         FirestoreService.shared.blockUser(targetId: publisherId, targetName: publisherName) { [weak self] error in
             DispatchQueue.main.async {
                 if error == nil {
-                    self?.showAutoDismissAlert(title: "Engellendi", message: "\(publisherName) başarıyla engellendi.", duration: 2.0)
+                    let msg = String(format: "block_success_message".localized, publisherName)
+                    self?.showAutoDismissAlert(title: "block_success_title".localized, message: msg, duration: 2.0)
                     // Engelledikten sonra detay ekranından çıkalım
                     self?.navigationController?.popViewController(animated: true)
                 } else {
-                    self?.showAutoDismissAlert(title: "Hata", message: "Engelleme işlemi başarısız oldu.", duration: 2.0)
+                    self?.showAutoDismissAlert(title: "photo_error".localized, message: "block_failed_message".localized, duration: 2.0)
                 }
             }
         }

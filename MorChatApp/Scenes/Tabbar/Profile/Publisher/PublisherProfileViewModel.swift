@@ -10,6 +10,10 @@ protocol PublisherProfileInputProtocol: AnyObject {
     func saveProfile(name: String?, about: String?, age: Int?, phone: String?)
     func updateInterests(_ tags: [InterestModel])
     func uploadProfileImage(_ image: UIImage)
+    func uploadGalleryImage(_ image: UIImage)
+    func uploadStoryImage(_ image: UIImage)
+    func deleteGalleryImage(at index: Int)
+    func deleteStory(at index: Int)
 }
 
 protocol PublisherProfileOutputProtocol: AnyObject {
@@ -37,6 +41,7 @@ class PublisherProfileViewModel: PublisherProfileInputProtocol {
             
             switch result {
             case .success(let pub):
+                print("publisher profile: \(pub)")
                 self.handleFetchedPublisher(pub)
             case .failure(let error):
                 self.output?.didFailWithError(message: error.localizedDescription)
@@ -115,6 +120,97 @@ class PublisherProfileViewModel: PublisherProfileInputProtocol {
         }
     }
     
+    func uploadStoryImage(_ image: UIImage) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        output?.didUpdateLoading(isLoading: true)
+        
+        StorageService.shared.uploadStoryImage(uid: uid, image: image) { [weak self] result in
+            guard let self = self else { return }
+            self.output?.didUpdateLoading(isLoading: false)
+            
+            switch result {
+            case .success(let url):
+                var pub = self.currentPublisher
+                var currentStories = pub?.stories ?? []
+                
+                // Yeni StoryModel oluşturuluyor
+                let newStory = StoryModel(
+                    id: UUID().uuidString,
+                    url: url,
+                    timestamp: Int64(Date().timeIntervalSince1970 * 1000),
+                    type: "image",
+                    viewCount: 0
+                )
+                
+                currentStories.append(newStory)
+                pub?.stories = currentStories
+                self.currentPublisher = pub
+                
+                if let finalPub = pub {
+                    self.performSave(pub: finalPub)
+                }
+                
+            case .failure(let error):
+                self.output?.didFailWithError(message: error.localizedDescription)
+            }
+        }
+    }
+    
+    func uploadGalleryImage(_ image: UIImage) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        output?.didUpdateLoading(isLoading: true)
+        
+        StorageService.shared.uploadGalleryImage(uid: uid, image: image) { [weak self] result in
+            guard let self = self else { return }
+            self.output?.didUpdateLoading(isLoading: false)
+            
+            switch result {
+            case .success(let url):
+                var pub = self.currentPublisher
+                var currentPhotos = pub?.photos ?? []
+                currentPhotos.append(url)
+                pub?.photos = currentPhotos
+                self.currentPublisher = pub
+                
+                if let finalPub = pub {
+                    self.performSave(pub: finalPub)
+                }
+                
+            case .failure(let error):
+                self.output?.didFailWithError(message: error.localizedDescription)
+            }
+        }
+    }
+    
+    func deleteGalleryImage(at index: Int) {
+        guard var pub = currentPublisher, var photos = pub.photos, index < photos.count else { return }
+        let urlToDelete = photos[index]
+        
+        output?.didUpdateLoading(isLoading: true)
+        StorageService.shared.deleteFile(at: urlToDelete) { [weak self] error in
+            guard let self = self else { return }
+            // Hata olsa bile (örneğin dosya bulunamadı) Firestore'dan linki temizliyoruz ki UI düzeltsin
+            photos.remove(at: index)
+            pub.photos = photos
+            self.currentPublisher = pub
+            self.performSave(pub: pub)
+        }
+    }
+    
+    func deleteStory(at index: Int) {
+        guard var pub = currentPublisher, var stories = pub.stories, index < stories.count else { return }
+        guard let urlToDelete = stories[index].url else { return }
+        
+        output?.didUpdateLoading(isLoading: true)
+        StorageService.shared.deleteFile(at: urlToDelete) { [weak self] error in
+            guard let self = self else { return }
+            stories.remove(at: index)
+            pub.stories = stories
+            self.currentPublisher = pub
+            self.performSave(pub: pub)
+        }
+    }
+
     private func performSave(pub: PublisherProfile) {
         output?.didUpdateLoading(isLoading: true)
         

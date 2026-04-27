@@ -1,0 +1,270 @@
+// MARK: - Onboarding
+"onboarding_continue" = "Continuer";
+"onboarding_skip" = "Passer";
+"onboarding_start" = "Démarrer";
+
+"onboarding_title_1" = "Diffusions en Direct Privées";
+"onboarding_desc_1" = "Rencontrez-vous lors de diffusions privées en tête-à-tête rien que pour vous. Communiquez directement avec les streamers, discutez sans foule.";
+
+"onboarding_title_2" = "Tous Sujets, Tout Âge";
+"onboarding_desc_2" = "Listez tous les streamers selon les centres d'intérêt que vous choisissez.";
+
+"onboarding_title_3" = "Vos Streamers Préférés";
+"onboarding_desc_3" = "Suivez vos streamers favoris et recevez des notifications lorsqu'ils commencent à diffuser.";
+
+"onboarding_title_4" = "Expérience Premium";
+"onboarding_desc_4" = "Pas de frais supplémentaires, pas de cadeaux. Achetez simplement des jetons et continuez.";
+
+"onboarding_title_5" = "Sûr & Privé";
+"onboarding_desc_5" = "Tous les appels sont cryptés de bout en bout. Votre vie privée est notre priorité.";
+
+// MARK: - Login Screen
+"login_gmail" = "Connexion avec Gmail";
+"login_apple" = "Se connecter avec Apple";
+"login_contracts" = "Texte des contrats";
+"login_gdpr" = "Texte RGPD";
+"login_age" = "J'ai plus de 18 ans";
+"login_guide" = "Connexion Guide";
+"login_error_title" = "ERREUR";
+"login_error_terms" = "Vous devez accepter toutes les conditions pour continuer.";
+"login_error_email" = "Veuillez entrer votre e-mail.";
+"login_error_password" = "Veuillez entrer votre mot de passe.";
+"common_ok" = "OK";
+
+// MARK: - Guide Login
+"login_guide_subtitle" = "Connectez-vous à votre compte guide";
+"login_guide_email" = "Votre adresse e-mail";
+"login_guide_password" = "Votre mot de passe";
+"login_guide_become" = "Voulez-vous devenir guide ?";
+"login_guide_login_button" = "Se connecter";
+
+// MARK: - Become Guide Screen
+"become_guide_title" = "Voulez-vous devenir guide ?";
+"become_guide_subtitle" = "Les guides peuvent gagner des points d'argent en fonction de leur durée de diffusion. Si vous voulez aussi devenir guide, contactez-nous !";
+"become_guide_select_topics" = "Sélectionnez vos sujets de diffusion (min 1, max 5)";
+"become_guide_name_placeholder" = "Nom complet";
+"become_guide_phone_placeholder" = "Numéro de téléphone";
+"become_guide_insta_placeholder" = "URL du profil Instagram";
+"become_guide_apply" = "Compléter la demande";
+
+// MARK: - Apply Actions
+"apply_error_topic" = "Veuillez sélectionner au moins un sujet.";
+"apply_error_name" = "Veuillez entrer votre nom et prénom.";
+"apply_error_phone" = "Veuillez entrer votre numéro de téléphone.";
+"apply_error_insta" = "Veuillez entrer l'URL de votre profil Instagram.";
+"apply_sending" = "Envoi en cours...";
+"apply_error_submit" = "Erreur lors de l'envoi de la demande : %@";
+"apply_success_title" = "Succès";
+"apply_success_message" = "Votre demande a été reçue avec succès.";
+"apply_missing_title" = "Informations manquantes";
+
+// MARK: - Countries
+"country_tr" = "Turquie";
+"country_de" = "Allemagne";
+"country_uk" = "Royaume-Uni";
+"country_fr" = "France";
+"country_al" = "Albanie";
+
+// MARK: - Tags
+"tag_spiritual" = "Discussions Spirituelles";
+"tag_dream" = "Interprétation des Rêves";
+"tag_mystery" = "Mystère";
+"tag_books" = "Livres";
+"tag_poetry" = "Poésie";
+"tag_astrology" = "Astrologie";
+"tag_psychology" = "Psychologie";
+"tag_love" = "Amour";
+"tag_travel" = "Voyage";
+"tag_romance" = "Romance";
+"tag_martial_arts" = "Arts Martiaux";
+"tag_real_estate" = "Immobilier";
+"tag_health" = "Santé";
+"tag_economy" = "Économie";
+"tag_technology" = "Technologie";
+"tag_plumber" = "Plombier";
+"tag_electrician" = "Électricien";
+"tag_beauty" = "Beauté / Cosmétiques";
+"tag_child" = "Développement de l'Enfant";
+"tag_music" = "Musique";
+"tag_cars" = "Voitures";
+"tag_food" = "Nourriture";
+"tag_fashion" = "Mode";
+"tag_football" = "Football";
+
+// MARK: - OTP Screen
+"otp_title" = "Code de Vérification";
+"otp_subtitle" = "Entrez le code à 6 chiffres envoyé au %@";
+"otp_resend_text" = "↻ Renvoyer le code dans : %d";
+"otp_continue_button" = "Continuer";
+"otp_success_title" = "Succès !";
+"otp_success_message" = "Redirection vers l'accueil...";
+"otp_error_title" = "Erreur";
+
+// MARK: - Home Screen
+"home_error_title" = "Erreur";
+
+// MARK: - Publisher Detail
+"pub_status_online" = "En ligne";
+"pub_status_away" = "Absent";
+"pub_call_now" = "Appeler maintenant";
+"pub_voice_call" = "Appel vocal";
+"pub_footer_info" = "Le streamer est actuellement hors ligne, mais vous pouvez essayer de l'appeler pour le joindre.\nVous pouvez également aimer le streamer pour recevoir des notifications lorsqu'il revient en ligne.";
+"pub_name_unknown" = "Inconnu";
+"pub_about_default" = "Discuter";
+
+// MARK: - Action Sheet
+"action_add_favorites" = "Ajouter aux favoris";
+"action_remove_favorites" = "Retirer des favoris";
+
+"action_block" = "Bloquer";
+"action_report" = "Signaler";
+
+// MARK: - Tabs
+"tab_home" = "Direct";
+"tab_favorites" = "J'aime";
+"tab_notifications" = "Notifications";
+"tab_profile" = "Mon Compte";
+"tab_history" = "Historique";
+
+// MARK: - Profile Screen
+"profile_title" = "Mon Compte";
+"profile_subtitle" = "Déterminez votre intérêt, discutez.";
+"profile_logout" = "Se déconnecter";
+"profile_logout_alert_title" = "Déconnexion";
+"profile_logout_alert_message" = "Êtes-vous sûr de vouloir vous déconnecter ?";
+"profile_logout_cancel" = "Annuler";
+
+// MARK: - Favorites
+"fav_title" = "Guides que j'aime";
+"fav_count_singular" = "%d guide";
+"fav_count_plural" = "%d guides";
+"fav_empty_title" = "La liste est vide";
+"fav_empty_desc" = "Ajoutez des diffuseurs que vous aimez et soyez averti lorsqu'ils sont en ligne.";
+
+// MARK: - Notifications
+"notif_title" = "Notifications";
+"notif_subtitle" = "Les appels manqués et les surprises sont sur cet écran";
+"notif_empty_title" = "La liste est vide";
+"notif_empty_desc" = "Si un diffuseur vous appelle et ne peut pas vous joindre, cela s'affichera ici.";
+"notif_default_title" = "Notification";
+"notif_now" = "Maintenant";
+
+// MARK: - Splash
+"splash_subtitle" = "Chat en direct privé en tête-à-tête";
+
+// MARK: - Menu Items
+"menu_interests" = "Centres d'intérêt";
+"menu_rules" = "Règles de l'application";
+"menu_blocked" = "Utilisateurs bloqués";
+"menu_settings" = "Paramètres";
+"menu_help" = "Aide & Support";
+
+// MARK: - FAQ
+"faq_title" = "Foire Aux Questions";
+"faq_contact" = "Contactez-nous";
+"faq_q1" = "Comment puis-je acheter des jetons ?";
+"faq_a1" = "Vous pouvez acheter des jetons dans Profil > Portefeuille.";
+"faq_q2" = "Comment puis-je discuter avec un streamer ?";
+"faq_a2" = "Vous pouvez envoyer des messages en rejoignant le flux en direct.";
+"faq_q3" = "Comment bloquer un streamer ?";
+"faq_a3" = "Vous pouvez appuyer sur le bouton de blocage sur son profil.";
+"faq_q4" = "Quand mes jetons arrivent-ils ?";
+"faq_a4" = "Ils sont instantanément crédités sur votre compte après le paiement.";
+"faq_q5" = "Comment puis-je supprimer mon compte ?";
+"faq_a5" = "Vous pouvez le supprimer dans Paramètres > Supprimer le compte.";
+"faq_q6" = "Comment puis-je faire un signalement ?";
+"faq_a6" = "Vous pouvez utiliser le bouton de signalement sur la page de profil.";
+
+// MARK: - Guide Home
+"guide_home_welcome" = "Bon retour, Guide !";
+"guide_status_online" = "Mode En Ligne";
+"guide_home_info" = "Assurez-ve d'être en ligne pour recevoir des appels.";
+
+// MARK: - Story & Gallery
+"story_delete_title" = "Supprimer la Story";
+"story_delete_message" = "Êtes-vous sûr de vouloir supprimer cette story ?";
+"gallery_delete_title" = "Supprimer la Photo";
+"gallery_delete_message" = "Êtes-vous sûr de vouloir supprimer cette photo de votre galerie ?";
+
+// MARK: - Photo Selection
+"photo_select_title" = "Sélectionner une Image";
+"photo_select_message" = "Veuillez sélectionner une source";
+"photo_source_camera" = "Caméra";
+"photo_source_gallery" = "Galerie";
+"photo_cancel" = "Annuler";
+"photo_delete" = "Supprimer";
+"photo_success" = "Succès";
+"photo_error" = "Erreur";
+"photo_update_success" = "Photo de profil mise à jour.";
+"photo_update_error" = "Échec de la mise à jour : %@";
+
+// MARK: - Call Notifications
+"notif_video_call" = "Appel Vidéo";
+"notif_voice_call" = "Appel Vocal";
+"notif_calling_body" = "%@ vous appelle...";
+
+// MARK: - Wallet
+"wallet_coins" = "Mes Jetons : %d";
+"wallet_coins_enough" = "Vous avez assez de jetons pour continuer vos discussions.";
+"wallet_coins_not_enough" = "Vous n'avez plus de jetons. Rechargez maintenant et continuez à discuter !";
+"wallet_buy_button" = "Acheter des Jetons";
+"wallet_free_banner" = "Opportunité de Jetons Gratuits";
+"wallet_ad_limit" = "Vous avez atteint la limite quotidienne de 5 publicités. Réessayez demain !";
+
+// MARK: - In-App Purchase
+"iap_screen_title" = "Acheter des jetons";
+"iap_restore_button" = "Restaurer";
+"iap_products_empty" = "Les produits n'ont pas pu être chargés pour le moment. Veuillez réessayer bientôt.";
+"iap_success_title" = "Achat";
+"iap_error_title" = "Erreur d'achat";
+"iap_token_amount" = "%d jetons";
+"iap_badge_popular" = "Populaire";
+"iap_purchase_success_message" = "%d jetons ont été ajoutés à votre portefeuille.";
+"iap_purchase_pending_message" = "Votre achat est en attente d'approbation. Nous ajouterons vos jetons dès qu'Apple le confirmera.";
+"iap_restore_success_message" = "Restauration terminée. Les achats inachevés ont été crédités dans votre portefeuille.";
+"iap_error_payments_unavailable" = "Les achats intégrés sont désactivés sur cet appareil.";
+"iap_error_product_unavailable" = "Ce produit est actuellement indisponible. Veuillez réessayer plus tard.";
+"iap_error_unknown_product" = "Le pack de jetons sélectionné n'est pas configuré correctement.";
+"iap_error_verification_failed" = "Apple n'a pas pu vérifier cette transaction.";
+"iap_error_login_required" = "Veuillez vous connecter avant d'effectuer un achat.";
+
+// MARK: - Favorite & Block Actions
+"fav_added_title" = "✅ Ajouté aux Favoris";
+"fav_added_message" = "%@ a été ajouté à vos favoris !";
+"fav_removed_title" = "Retiré des Favoris";
+"fav_removed_message" = "%@ a été retiré de vos favoris.";
+"block_success_title" = "Bloqué";
+"block_success_message" = "%@ a été bloqué avec succès.";
+"block_failed_message" = "Échec du processus de blocage.";
+
+// MARK: - Settings Screen
+"settings_notif_allow_title" = "Autorisations de Notification";
+"settings_notif_allow_desc" = "Si désactivé, vous pourriez manquer des diffusions privées.";
+"settings_language_title" = "Langue";
+"settings_language_desc" = "Changer la langue de l'application.";
+"settings_privacy_title" = "Politique de Confidentialité";
+"settings_privacy_desc" = "Vos données sont en sécurité, consultez le document.";
+"settings_kvkk_title" = "Document RGPD";
+"settings_kvkk_desc" = "Toute nos opérations sont conformes au RGPD, consultez le document.";
+"settings_permissions_title" = "Autorisations";
+"settings_permissions_desc" = "Gérer les autorisations de l'application.";
+"settings_section_notif" = "Notifications";
+"settings_section_general" = "Paramètres";
+
+// MARK: - Publisher Profile
+"pub_prof_stories" = "Mes Stories";
+"pub_prof_gallery" = "Galerie";
+"pub_prof_interests" = "Centres d'intérêt / Tags";
+"pub_prof_about" = "À propos de moi";
+"pub_prof_nickname" = "Pseudo / Âge";
+"pub_prof_phone" = "Numéro de téléphone";
+"pub_prof_notif" = "Autorisations de Notification";
+"pub_prof_email" = "E-mail";
+"pub_prof_edit" = "Modifier";
+"pub_prof_notif_allowed" = "Notifications autorisées";
+"pub_prof_stories_desc" = "Gérez vos stories publiées ici.";
+"pub_prof_gallery_desc" = "Gérez les photos qui apparaîtront sur votre profil ici.";
+"pub_prof_interests_desc" = "Tags indiquant le sujet de vos diffusions.\nIl n'est pas recommandé de diffuser en dehors de la zone sélectionnée.";
+"pub_prof_about_desc" = "Un court texte de présentation.";
+"pub_prof_notif_desc" = "Si désactivé, vous pourriez manquer des demandes de diffusion.";
+"pub_prof_error_title" = "Erreur";

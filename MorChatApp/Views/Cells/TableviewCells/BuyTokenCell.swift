@@ -34,11 +34,10 @@ final class BuyTokenCell: UITableViewCell {
     }
     
     func configure(with model: TokenPackage) {
-        
         titleLabel.text = model.title
         priceLabel.text = model.price
-        
-        if let discount = model.discountText {
+
+        if let discount = model.discountText, !discount.isEmpty {
             discountLabel.text = "  \(discount)  "
             discountLabel.isHidden = false
         } else {

@@ -22,6 +22,7 @@ protocol FirestoreServiceProtocol {
     func unblockUser(targetId: String, targetName: String, completion: @escaping (Error?) -> Void)
     func addCoins(amount: Int, completion: @escaping (Error?) -> Void)
     func deductCoins(amount: Int, completion: @escaping (Error?) -> Void)
+    func applyCoinPurchase(transactionId: String, productId: String, amount: Int, completion: @escaping (Result<Bool, Error>) -> Void)
 }
 
 
@@ -83,6 +84,19 @@ class FirestoreService: FirestoreServiceProtocol {
         let profilePic = data["profilePic"] as? String
         let status = data["status"] as? String
         let photos = data["photos"] as? [String]
+        
+        // Story parse mantığı (Map dizisinden StoryModel'e)
+        let storyData = data["stories"] as? [[String: Any]] ?? []
+        let stories = storyData.map { dict in
+            StoryModel(
+                id: dict["id"] as? String,
+                url: dict["url"] as? String,
+                timestamp: dict["timestamp"] as? Int64,
+                type: dict["type"] as? String,
+                viewCount: dict["viewCount"] as? Int
+            )
+        }
+        
         let tagList = data["tagList"] as? [Int]
         let blockedWatcherList = data["blockedWatcherList"] as? [[String: String]]
         
@@ -101,6 +115,7 @@ class FirestoreService: FirestoreServiceProtocol {
             status: status,
             tagList: tagList,
             photos: photos,
+            stories: stories.isEmpty ? nil : stories,
             blockedWatcherList: blockedWatcherList
         )
     }
@@ -131,6 +146,18 @@ class FirestoreService: FirestoreServiceProtocol {
             let profilePic = data["profilePic"] as? String
             let status = data["status"] as? String
             let photos = data["photos"] as? [String]
+            
+            let storyData = data["stories"] as? [[String: Any]] ?? []
+            let stories = storyData.map { dict in
+                StoryModel(
+                    id: dict["id"] as? String,
+                    url: dict["url"] as? String,
+                    timestamp: dict["timestamp"] as? Int64,
+                    type: dict["type"] as? String,
+                    viewCount: dict["viewCount"] as? Int
+                )
+            }
+            
             let tagList = data["tagList"] as? [Int]
             let blockedWatcherList = data["blockedWatcherList"] as? [[String: String]]
 
@@ -149,6 +176,7 @@ class FirestoreService: FirestoreServiceProtocol {
                 status: status,
                 tagList: tagList,
                 photos: photos,
+                stories: stories.isEmpty ? nil : stories,
                 blockedWatcherList: blockedWatcherList
             )
             completion(.success(profile))
@@ -227,13 +255,26 @@ class FirestoreService: FirestoreServiceProtocol {
             }
         }
     }
-
     
     func updateProfileImageURL(uid: String, url: String, completion: @escaping (Error?) -> Void) {
-        db.collection("UserWatcher").document(uid).updateData([
-            "profileImage": url
-        ]) { error in
-            completion(error)
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        
+        let myCollection = (userType == "guide") ? "PublisherProfile" : "UserWatcher"
+        
+        // Yayıncı/Rehber ise farklı koleksiyon ve alan adı kullanılır
+        if userType == "guide" {
+            db.collection("PublisherProfile").document(uid).updateData([
+                "profilePic": url
+            ]) { error in
+                completion(error)
+            }
+        } else {
+            // İzleyici ise standart UserWatcher ve profileImage
+            db.collection("UserWatcher").document(uid).updateData([
+                "profileImage": url
+            ]) { error in
+                completion(error)
+            }
         }
     }
     
@@ -268,7 +309,8 @@ class FirestoreService: FirestoreServiceProtocol {
             "profilePic": profile.profilePic ?? "",
             "status": profile.status ?? "Online",
             "tagList": profile.tagList ?? [],
-            "photos": profile.photos ?? []
+            "photos": profile.photos ?? [],
+            "stories": profile.stories?.map { $0.dictionary } ?? []
         ]
         
         if let currentFCM = UserDefaults.standard.string(forKey: "fcm_token") {
@@ -287,9 +329,60 @@ class FirestoreService: FirestoreServiceProtocol {
         db.collection("UserWatcher").document(uid).setData(["msgToken": token], merge: true)
         
         // Update PublisherProfile (for guides/publishers)
-        // Note: It's safe to call merge:true on both, as we only update the document if it exists or create/update the field.
         db.collection("PublisherProfile").document(uid).setData(["msgToken": token], merge: true)
-        
+    }
+
+    func updateVoIPToken(token: String) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        db.collection("UserWatcher").document(uid).setData(["voipToken": token], merge: true)
+        db.collection("PublisherProfile").document(uid).setData(["voipToken": token], merge: true)
+    }
+
+    func applyCoinPurchase(transactionId: String, productId: String, amount: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            let error = NSError(
+                domain: "Firestore",
+                code: 401,
+                userInfo: [NSLocalizedDescriptionKey: "User must be logged in to complete purchase."]
+            )
+            completion(.failure(error))
+            return
+        }
+
+        let userRef = db.collection("UserWatcher").document(uid)
+        let purchaseRef = userRef.collection("coinPurchases").document(transactionId)
+
+        db.runTransaction({ transaction, errorPointer in
+            do {
+                let existingPurchase = try transaction.getDocument(purchaseRef)
+                if existingPurchase.exists {
+                    return false
+                }
+
+                transaction.setData([
+                    "creditCount": FieldValue.increment(Int64(amount))
+                ], forDocument: userRef, merge: true)
+
+                transaction.setData([
+                    "transactionId": transactionId,
+                    "productId": productId,
+                    "amount": amount,
+                    "createdAt": FieldValue.serverTimestamp()
+                ], forDocument: purchaseRef)
+
+                return true
+            } catch {
+                errorPointer?.pointee = error as NSError
+                return nil
+            }
+        }) { result, error in
+            if let error {
+                completion(.failure(error))
+                return
+            }
+
+            completion(.success((result as? Bool) ?? false))
+        }
     }
     
     func fetchUserProfile(uid: String, completion: @escaping (Result<UserModel, Error>) -> Void) {
@@ -609,4 +702,3 @@ class FirestoreService: FirestoreServiceProtocol {
         }
     }
 }
-

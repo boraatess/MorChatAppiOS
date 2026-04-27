@@ -34,6 +34,16 @@ final class SettingsViewController: UIViewController {
         setupUI()
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(languageChanged), name: .languageChanged, object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func languageChanged() {
+        setupUI()
+        viewModel.fetchItems()
     }
     
     @objc private func appWillEnterForeground() {
@@ -117,15 +127,16 @@ extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
         let item = sectionSettings[indexPath.section].items[indexPath.row]
         
         cell.configure(with: item)
-        
+                
         cell.toggleChanged = { isOn in
             if indexPath.section == 0 && indexPath.row == 0 {
-                if let url = URL(string: UIApplication.openSettingsURLString) {
+                // iOS 16.6 olduğu için doğrudan bildirim ayarlarını açabiliriz
+                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
                     UIApplication.shared.open(url)
                 }
             }
         }
-        
+
         return cell
     }
     
@@ -180,10 +191,8 @@ extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
         ]
         
         for (name, code) in languages {
-            alert.addAction(UIAlertAction(title: name, style: .default, handler: { [weak self] _ in
+            alert.addAction(UIAlertAction(title: name, style: .default, handler: { _ in
                 LocalizationManager.shared.currentLanguage = code
-                self?.viewModel.fetchItems() 
-                self?.profileHeader.configure(with: "menu_settings".localized, image: "")
             }))
         }
         

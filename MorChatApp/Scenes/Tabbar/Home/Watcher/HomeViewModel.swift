@@ -16,6 +16,7 @@ protocol HomeViewModelInputprotocol: AnyObject {
 protocol HomeViewModelOutputprotocol: AnyObject {
     func didFetchUsers(with users: [UserCardModel])
     func didFetchTags(_ tags: [String])
+    func didFetchStories(_ stories: [PublisherProfile])
     func didFail(with error: String)
     func setLoader(isVisible: Bool)
 }
@@ -27,6 +28,7 @@ class HomeViewModel: HomeViewModelInputprotocol {
     
     // UI’da kullanılacak tek kaynak
     private(set) var users: [UserCardModel] = []
+    private(set) var availableStories: [PublisherProfile] = []
     
     // Tüm veriler (değişmez)
     private var allProfiles: [PublisherProfile] = []
@@ -123,7 +125,11 @@ class HomeViewModel: HomeViewModelInputprotocol {
             )
         }
         
-        // 3. UI güncelle
+        // 3. Hikayeleri ayıkla
+        self.availableStories = allProfiles.filter { !($0.stories?.isEmpty ?? true) }
+        output?.didFetchStories(availableStories)
+        
+        // 4. UI güncelle
         output?.didFetchUsers(with: users)
     }
 }

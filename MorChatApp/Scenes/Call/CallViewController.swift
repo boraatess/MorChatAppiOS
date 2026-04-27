@@ -394,6 +394,7 @@ final class CallViewController: BaseVC {
         hideLoading()
         agoraManager.leaveChannel()
         signalingClient.endCall()
+        CallManager.shared.endCall()
         stopAudio()
         dismiss(animated: true)
     }

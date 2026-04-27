@@ -1,7 +1,3 @@
-//
-//  PublisherProfileVC.swift
-//  MorChatApp
-//
 
 import UIKit
 import SnapKit
@@ -17,30 +13,35 @@ final class PublisherProfileVC: BaseVC {
         
         var title: String? {
             switch self {
-            case .stories: return "My Stories"
-            case .gallery: return "Gallery"
-            case .interests: return "Interests / Tags"
-            case .about: return "About Me"
-            case .nickname: return "Nickname"
-            case .age: return "Age"
-            case .phone: return "Phone Number"
-            case .notifications: return "Notification Permissions"
-            case .email: return "E-mail"
+            case .stories: return "pub_prof_stories".localized
+            case .gallery: return "pub_prof_gallery".localized
+            case .interests: return "pub_prof_interests".localized
+            case .about: return "pub_prof_about".localized
+            case .nickname: return "pub_prof_nickname".localized
+            case .age: return nil // Nickname ile birleştirildi
+            case .phone: return "pub_prof_phone".localized
+            case .notifications: return "pub_prof_notif".localized
+            case .email: return "pub_prof_email".localized
             case .menuGroup: return nil
             }
         }
         
         var subtitle: String? {
             switch self {
-            case .stories: return "You can manage your published stories here."
-            case .gallery: return "You can manage photos that will appear on your profile here."
-            case .interests: return "Tags indicating the subject of your broadcasts."
-            case .about: return "A short text introducing yourself."
-            case .notifications: return "If off, you may miss broadcast requests."
+            case .stories: return "pub_prof_stories_desc".localized
+            case .gallery: return "pub_prof_gallery_desc".localized
+            case .interests: return "pub_prof_interests_desc".localized
+            case .about: return "pub_prof_about_desc".localized
+            case .notifications: return "pub_prof_notif_desc".localized
             default: return nil
             }
         }
     }
+
+    private enum PickerSource {
+        case profile, gallery, story
+    }
+    private var pickerSource: PickerSource = .profile
 
     private lazy var tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .plain)
@@ -51,6 +52,8 @@ final class PublisherProfileVC: BaseVC {
         tv.dataSource = self
         tv.register(ProfileSectionCell.self, forCellReuseIdentifier: ProfileSectionCell.identifier)
         tv.register(ProfileMenuCell.self, forCellReuseIdentifier: ProfileMenuCell.identifier)
+        tv.register(ProfileStoriesCell.self, forCellReuseIdentifier: ProfileStoriesCell.identifier)
+        tv.register(ProfileGalleryCell.self, forCellReuseIdentifier: ProfileGalleryCell.identifier)
         return tv
     }()
     
@@ -68,7 +71,7 @@ final class PublisherProfileVC: BaseVC {
             make.top.equalTo(headerView.snp.bottom).offset(8)
             make.leading.trailing.bottom.equalToSuperview()
         }
-        let header = PublisherProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 200))
+        let header = PublisherProfileHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 220))
         header.delegate = self
         tableView.tableHeaderView = header
         setupLogoutFooter()
@@ -97,12 +100,10 @@ final class PublisherProfileVC: BaseVC {
     
     @objc private func logoutTapped() {
         let alert = UIAlertController(title: "profile_logout_alert_title".localized, message: "profile_logout_alert_message".localized, preferredStyle: .alert)
-        let cancelAction = UIAlertAction(title: "profile_logout_cancel".localized, style: .cancel)
-        let logoutAction = UIAlertAction(title: "profile_logout".localized, style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "profile_logout_cancel".localized, style: .cancel))
+        alert.addAction(UIAlertAction(title: "profile_logout".localized, style: .destructive) { [weak self] _ in
             self?.performLogout()
-        }
-        alert.addAction(cancelAction)
-        alert.addAction(logoutAction)
+        })
         present(alert, animated: true)
     }
     
@@ -113,6 +114,11 @@ final class PublisherProfileVC: BaseVC {
             window.rootViewController = BaseNavigationController(rootViewController: LoginViewController())
             UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
         }
+    }
+    
+    override func applyLocalization() {
+        tableView.reloadData()
+        setupLogoutFooter() // Footer metnini tazele
     }
 }
 
@@ -135,19 +141,18 @@ extension PublisherProfileVC: PublisherProfileOutputProtocol {
     
     func didFailWithError(message: String) {
         DispatchQueue.main.async {
-            self.showAlert(title: "Hata", message: message)
+            self.showAlert(title: "pub_prof_error_title".localized, message: message)
         }
     }
 }
 
 // MARK: - TableView
 extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
-    func numberOfSections(in tableView: UITableView) -> Int {
-        return Section.allCases.count
-    }
+    func numberOfSections(in tableView: UITableView) -> Int { return Section.allCases.count }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         guard let s = Section(rawValue: section) else { return 0 }
+        if s == .age { return 0 } // Nickname ile birleşti
         if s == .menuGroup { return 2 }
         return 1
     }
@@ -155,64 +160,89 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         guard let section = Section(rawValue: indexPath.section) else { return UITableViewCell() }
         
-        if section == .menuGroup {
+        switch section {
+        case .stories:
+            let cell = tableView.dequeueReusableCell(withIdentifier: ProfileStoriesCell.identifier, for: indexPath) as! ProfileStoriesCell
+            let pub = viewModel.currentPublisher
+            cell.configure(title: section.title ?? "", subtitle: section.subtitle, stories: pub?.stories, profilePic: pub?.profilePic)
+            cell.onStorySelected = { [weak self] in
+                guard let self = self, let pub = self.viewModel.currentPublisher, let stories = pub.stories, !stories.isEmpty else { return }
+                let vc = StoryDetailViewController(
+                    storyUrls: stories.compactMap { $0.url },
+                    userName: pub.name,
+                    userProfilePic: pub.profilePic
+                )
+                vc.onDeleteTapped = { [weak self] index in
+                    self?.viewModel.deleteStory(at: index)
+                }
+                self.present(vc, animated: true)
+            }
+            return cell
+            
+        case .gallery:
+            let cell = tableView.dequeueReusableCell(withIdentifier: ProfileGalleryCell.identifier, for: indexPath) as! ProfileGalleryCell
+            cell.configure(title: section.title ?? "", subtitle: section.subtitle, photos: viewModel.currentPublisher?.photos ?? [])
+            cell.onAddPhotoTapped = { [weak self] in
+                self?.pickerSource = .gallery
+                self?.showImageSourceOptions()
+            }
+            cell.onDeletePhotoTapped = { [weak self] index in
+                let alert = UIAlertController(title: "gallery_delete_title".localized, message: "gallery_delete_message".localized, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "photo_cancel".localized, style: .cancel))
+                alert.addAction(UIAlertAction(title: "photo_delete".localized, style: .destructive) { _ in
+                    self?.viewModel.deleteGalleryImage(at: index)
+                })
+                self?.present(alert, animated: true)
+            }
+            return cell
+            
+        case .menuGroup:
             let cell = tableView.dequeueReusableCell(withIdentifier: ProfileMenuCell.identifier, for: indexPath) as! ProfileMenuCell
             let container = UIView()
             container.backgroundColor = UIColor(red: 0.18, green: 0.12, blue: 0.30, alpha: 1.0)
             cell.contentView.insertSubview(container, at: 0)
-            container.snp.makeConstraints { make in
-                make.leading.trailing.equalToSuperview().inset(16)
-                make.top.bottom.equalToSuperview()
-            }
+            container.snp.makeConstraints { $0.leading.trailing.equalToSuperview().inset(16); $0.top.bottom.equalToSuperview() }
             if indexPath.row == 0 {
-                container.layer.cornerRadius = 10
-                container.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-                cell.configure(title: "App Rules", icon: "eye.circle", showSeparator: true)
+                container.layer.cornerRadius = 10; container.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+                cell.configure(title: "menu_rules".localized, icon: "eye.circle", showSeparator: true)
             } else {
-                container.layer.cornerRadius = 10
-                container.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
-                cell.configure(title: "Settings", icon: "gearshape", showSeparator: false)
+                container.layer.cornerRadius = 10; container.layer.maskedCorners = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
+                cell.configure(title: "menu_settings".localized, icon: "gearshape", showSeparator: false)
             }
             return cell
+            
+        default:
+            let cell = tableView.dequeueReusableCell(withIdentifier: ProfileSectionCell.identifier, for: indexPath) as! ProfileSectionCell
+            var content = ""
+            var tags: [String]? = nil
+            var btnTitle: String? = "Edit"
+            var btnHidden = false
+            let pub = viewModel.currentPublisher
+            
+            switch section {
+            case .nickname: content = "\(pub?.name ?? "")/\(pub?.age ?? 0)"
+            case .email: content = pub?.email ?? ""; btnHidden = true
+            case .phone: content = pub?.phoneNumber ?? ""
+            case .about: content = pub?.about ?? ""
+            case .interests: tags = viewModel.selectedInterests.map { $0.name }
+            case .notifications: content = "pub_prof_notif_allowed".localized; btnTitle = "menu_settings".localized
+            default: break
+            }
+            
+            btnTitle = "pub_prof_edit".localized
+            if section == .notifications { btnTitle = "menu_settings".localized }
+            
+            cell.configure(title: section.title ?? "", subtitle: section.subtitle, content: content, tags: tags, buttonTitle: btnTitle, isButtonHidden: btnHidden)
+            cell.onEditTapped = { [weak self] in self?.handleEdit(section) }
+            return cell
         }
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: ProfileSectionCell.identifier, for: indexPath) as! ProfileSectionCell
-        var content = ""
-        var tags: [String]? = nil
-        var btnTitle: String? = "Edit"
-        var btnHidden = false
-        
-        let pub = viewModel.currentPublisher
-        
-        switch section {
-        case .nickname: content = pub?.name ?? ""
-        case .age: content = "\(pub?.age ?? 0)"
-        case .email:
-            content = pub?.email ?? ""
-            btnHidden = true
-        case .phone: content = pub?.phoneNumber ?? "Not added"
-        case .about: content = pub?.about ?? ""
-        case .interests:
-            tags = viewModel.selectedInterests.map { $0.name }
-        case .notifications: 
-            content = "On"
-            btnTitle = "Turn Off"
-        default: break
-        }
-        
-        cell.configure(title: section.title ?? "", subtitle: section.subtitle, content: content, tags: tags, buttonTitle: btnTitle, isButtonHidden: btnHidden)
-        cell.onEditTapped = { [weak self] in self?.handleEdit(section) }
-        return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         guard let section = Section(rawValue: indexPath.section) else { return }
         if section == .menuGroup {
-            if indexPath.row == 0 {
-                navigationController?.pushViewController(AppRulesViewController(), animated: true)
-            } else {
-                navigationController?.pushViewController(SettingsViewController(), animated: true)
-            }
+            if indexPath.row == 0 { navigationController?.pushViewController(AppRulesViewController(), animated: true) }
+            else { navigationController?.pushViewController(SettingsViewController(), animated: true) }
         }
     }
     
@@ -225,12 +255,14 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
             present(vc, animated: true)
         case .nickname:
             presentEditSheet(for: .nickname, value: pub?.name ?? "")
-        case .age:
-            presentEditSheet(for: .age, value: "\(pub?.age ?? 0)")
         case .about:
             presentEditSheet(for: .about, value: pub?.about ?? "")
         case .phone:
             presentEditSheet(for: .phone, value: pub?.phoneNumber ?? "")
+        case .notifications:
+            if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
         default: break
         }
     }
@@ -244,6 +276,27 @@ extension PublisherProfileVC: UITableViewDataSource, UITableViewDelegate {
         }
         present(vc, animated: true)
     }
+    
+    private func showImageSourceOptions() {
+        let alert = UIAlertController(title: "photo_select_title".localized, message: "photo_select_message".localized, preferredStyle: .actionSheet)
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            alert.addAction(UIAlertAction(title: "photo_source_camera".localized, style: .default) { _ in
+                self.openImagePicker(sourceType: .camera)
+            })
+        }
+        alert.addAction(UIAlertAction(title: "photo_source_gallery".localized, style: .default) { _ in
+            self.openImagePicker(sourceType: .photoLibrary)
+        })
+        alert.addAction(UIAlertAction(title: "photo_cancel".localized, style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func openImagePicker(sourceType: UIImagePickerController.SourceType) {
+        let picker = UIImagePickerController()
+        picker.delegate = self
+        picker.sourceType = sourceType
+        present(picker, animated: true)
+    }
 }
 
 // MARK: - Edit Delegate
@@ -252,31 +305,34 @@ extension PublisherProfileVC: PublisherEditValueDelegate {
         switch type {
         case .nickname: viewModel.saveProfile(name: value, about: nil, age: nil, phone: nil)
         case .about: viewModel.saveProfile(name: nil, about: value, age: nil, phone: nil)
-        case .age: viewModel.saveProfile(name: nil, about: nil, age: Int(value), phone: nil)
         case .phone: viewModel.saveProfile(name: nil, about: nil, age: nil, phone: value)
+        default: break
         }
     }
 }
 
-// MARK: - Header & Picker Extensions
+// MARK: - Header & Picker
 extension PublisherProfileVC: PublisherProfileHeaderViewDelegate {
     func publisherHeaderDidTapPhoto() {
-        let picker = UIImagePickerController()
-        picker.delegate = self
-        picker.sourceType = .photoLibrary
-        present(picker, animated: true)
+        pickerSource = .profile
+        showImageSourceOptions()
     }
-    func publisherHeaderDidTapAddStory() { print("Add Story tapped") }
+    func publisherHeaderDidTapAddStory() {
+        pickerSource = .story
+        showImageSourceOptions()
+    }
 }
 
 extension PublisherProfileVC: InterestsSelectionDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-    func didUpdateInterests(_ tags: [InterestModel]) {
-        viewModel.updateInterests(tags)
-    }
+    func didUpdateInterests(_ tags: [InterestModel]) { viewModel.updateInterests(tags) }
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true)
         if let img = info[.originalImage] as? UIImage {
-            viewModel.uploadProfileImage(img)
+            switch pickerSource {
+            case .profile: viewModel.uploadProfileImage(img)
+            case .gallery: viewModel.uploadGalleryImage(img)
+            case .story: viewModel.uploadStoryImage(img)
+            }
         }
     }
 }

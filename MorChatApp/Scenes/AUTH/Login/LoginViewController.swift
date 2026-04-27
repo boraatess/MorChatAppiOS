@@ -70,7 +70,7 @@ final class LoginViewController: BaseVC {
     
     private let guideLoginButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("Guide Login >", for: .normal)
+        b.setTitle("login_guide".localized + " >", for: .normal)
         b.setTitleColor(.white, for: .normal)
         b.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         b.backgroundColor = .clear

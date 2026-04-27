@@ -35,11 +35,11 @@ final class MenuContainerView: UIView {
             make.edges.equalToSuperview()
         }
 
-        addRow(title: "İlgi Alanları")
-        addRow(title: "Uygulama Kuralları")
-        addRow(title: "Engellenen Yayıncılar")
-        addRow(title: "Ayarlar")
-        addRow(title: "Yardım")
+        addRow(title: "menu_interests".localized)
+        addRow(title: "menu_rules".localized)
+        addRow(title: "menu_blocked".localized)
+        addRow(title: "menu_settings".localized)
+        addRow(title: "menu_help".localized)
     }
 
     private func addRow(title: String) {

@@ -1,20 +1,49 @@
+
 import UIKit
 import FirebaseFirestore
 import FirebaseAuth
+import CallKit
+import AVFoundation
+import PushKit
 
-final class CallManager {
+final class CallManager: NSObject {
     static let shared = CallManager()
     
     private let signalingClient = SignalingClient.shared
     private var incomingCallListener: ListenerRegistration?
     private var authListener: AuthStateDidChangeListenerHandle?
     
-    private init() {}
+    // CallKit Bileşenleri
+    private let callController = CXCallController()
+    private let provider: CXProvider
+    private var activeCallId: UUID?
+    private var currentCallData: (callId: String, profile: PublisherProfile, isVideo: Bool)?
+    
+    // PushKit (VoIP) Bileşenleri
+    private var voipRegistry: PKPushRegistry?
+    
+    private override init() {
+        let configuration = CXProviderConfiguration(localizedName: "Mor Chat")
+        configuration.supportsVideo = true
+        configuration.maximumCallGroups = 1
+        configuration.supportedHandleTypes = [.generic]
+        
+        provider = CXProvider(configuration: configuration)
+        super.init()
+        provider.setDelegate(self, queue: nil)
+        
+        // PushKit Kurulumu
+        setupVoIP()
+    }
+    
+    private func setupVoIP() {
+        voipRegistry = PKPushRegistry(queue: nil)
+        voipRegistry?.delegate = self
+        voipRegistry?.desiredPushTypes = [.voIP]
+    }
     
     func start() {
         print("📞 CallManager: Starting...")
-        
-        // Listen for Auth changes
         authListener = Auth.auth().addStateDidChangeListener { [weak self] (auth, user) in
             if let user = user {
                 print("✅ CallManager: User logged in (\(user.uid)), starting call listener.")
@@ -27,13 +56,12 @@ final class CallManager {
     }
     
     private func listen() {
-        stop() // Clear existing listener
+        stop()
         incomingCallListener = signalingClient.listenForIncomingCalls { [weak self] callId, callerId, isVideo in
-            print("📞 CallManager: Incoming call detected! ID: \(callId)")
+            print("📞 CallManager: Incoming call detected via Firestore! ID: \(callId)")
             self?.handleIncomingCall(callId: callId, callerId: callerId, isVideo: isVideo)
         }
     }
-
     
     func stop() {
         incomingCallListener?.remove()
@@ -41,50 +69,120 @@ final class CallManager {
     }
     
     private func handleIncomingCall(callId: String, callerId: String, isVideo: Bool) {
-        // Avoid showing duplicate call screens if one is already active
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootVC = windowScene.windows.first?.rootViewController else { return }
+        // Eğer zaten bir arama aktifse veya sistem ekranı açıksa yeni gösterme
+        guard activeCallId == nil else { return }
         
-        if let presented = rootVC.presentedViewController, presented is CallViewController {
-            return
-        }
-        
-        // Fetch caller profile info first
         FirestoreService.shared.fetchPublisherProfile(publisherId: callerId) { [weak self] result in
             DispatchQueue.main.async {
-                switch result {
-                case .success(let profile):
-                    self?.showIncomingCallUI(callId: callId, profile: profile, isVideo: isVideo)
-                    
-                case .failure:
-                    // If we can't find profile, still show something with defaults
-                    let defaultProfile = PublisherProfile.empty
-                    self?.showIncomingCallUI(callId: callId, profile: defaultProfile, isVideo: isVideo)
-                    
-                }
+                let profile = (try? result.get()) ?? PublisherProfile.empty
+                self?.reportIncomingCallToSystem(callId: callId, profile: profile, isVideo: isVideo)
             }
         }
     }
     
-    private func showIncomingCallUI(callId: String, profile: PublisherProfile, isVideo: Bool) {
+    private func reportIncomingCallToSystem(callId: String, profile: PublisherProfile, isVideo: Bool) {
+        let uuid = UUID()
+        self.activeCallId = uuid
+        self.currentCallData = (callId, profile, isVideo)
+        
+        let update = CXCallUpdate()
+        update.remoteHandle = CXHandle(type: .generic, value: profile.name ?? "Bilinmeyen")
+        update.hasVideo = isVideo
+        
+        provider.reportNewIncomingCall(with: uuid, update: update) { [weak self] error in
+            if let error = error {
+                print("❌ CallKit Error: \(error.localizedDescription)")
+                self?.activeCallId = nil
+            }
+        }
+    }
+    
+    func endCall() {
+        guard let uuid = activeCallId else { return }
+        let endAction = CXEndCallAction(call: uuid)
+        let transaction = CXTransaction(action: endAction)
+        callController.request(transaction) { error in
+            if let error = error { print("❌ End Call Error: \(error)") }
+        }
+    }
+}
+
+// MARK: - CXProviderDelegate
+extension CallManager: CXProviderDelegate {
+    func providerDidReset(_ provider: CXProvider) {
+        activeCallId = nil
+    }
+    
+    func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
+        guard let data = currentCallData else {
+            action.fail()
+            return
+        }
+        
+        DispatchQueue.main.async {
+            self.showCallViewController(profile: data.profile, isVideo: data.isVideo, callId: data.callId)
+            action.fulfill()
+        }
+    }
+    
+    func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
+        if let data = currentCallData {
+            SignalingClient.shared.rejectCall(callId: data.callId)
+        }
+        activeCallId = nil
+        currentCallData = nil
+        action.fulfill()
+    }
+    
+    private func showCallViewController(profile: PublisherProfile, isVideo: Bool, callId: String) {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = windowScene.windows.first?.rootViewController else { return }
         
-        let title = isVideo ? "Incoming Video Call" : "Incoming Voice Call"
-        let message = "\(profile.name ?? "Someone") is calling you."
+        let callVC = CallViewController(profile: profile, isVideoCall: isVideo, callId: callId)
+        callVC.modalPresentationStyle = .fullScreen
         
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        topVC.present(callVC, animated: true)
+    }
+}
+
+// MARK: - PKPushRegistryDelegate (PushKit)
+extension CallManager: PKPushRegistryDelegate {
+    
+    // VoIP Token alındığında veya güncellendiğinde (iOS 13+)
+    func pushRegistry(_ registry: PKPushRegistry, didUpdate credentials: PKPushCredentials, for type: PKPushType) {
+        if type == .voIP {
+            
+            let pToken = credentials.token.map { String(format: "%02.2hhx", $0)
+            }.joined()
+            
+           /* let token = credentials.pushToken.map { String(format: "%02.2hhx", $0) }.joined()*/
+            
+            print("🚀 VoIP Token Received: \(pToken)")
+            
+            FirestoreService.shared.updateVoIPToken(token: pToken)
+            
+        }
+    }
+    
+    // Uygulama kapalıyken veya arkadayken VoIP bildirimi geldiğinde
+    func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         
-        alert.addAction(UIAlertAction(title: "Decline", style: .destructive, handler: { _ in
-            SignalingClient.shared.rejectCall(callId: callId)
-        }))
+        let data = payload.dictionaryPayload
         
-        alert.addAction(UIAlertAction(title: "Accept", style: .default, handler: { [weak rootVC] _ in
-            let callVC = CallViewController(profile: profile, isVideoCall: isVideo, callId: callId)
-            callVC.modalPresentationStyle = .fullScreen
-            rootVC?.present(callVC, animated: true)
-        }))
+        if let callId = data["callId"] as? String,
+           let callerId = data["callerId"] as? String {
+            
+            let isVideo = (data["video"] as? Bool) ?? true
+            
+            // Arka planda sistemi uyandırıp CallKit ekranını gösteriyoruz
+            handleIncomingCall(callId: callId, callerId: callerId, isVideo: isVideo)
+        }
         
-        rootVC.present(alert, animated: true)
+        // İşlem bittiğinde Apple'a bildiriyoruz
+        completion()
     }
 }

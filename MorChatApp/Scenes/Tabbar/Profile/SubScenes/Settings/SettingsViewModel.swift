@@ -36,47 +36,47 @@ class SettingsViewModel: SettingsViewModelInputprotocol {
         let notifyitems = [
             SettingItem(
                 icon: UIImage(systemName: "bell.fill"),
-                title: "Bildirim İzinleri",
-                subtitle: "Kapalı olursa özel canlı yayınları kaçırabilirsin.",
+                title: "settings_notif_allow_title".localized,
+                subtitle: "settings_notif_allow_desc".localized,
                 docUrl: "",
-                type: .toggle(isOn: isAuthorized) // Sistemden gelen izin durumunu buraya bağladık
+                type: .toggle(isOn: isAuthorized)
             )
         ]
         
         let settingsitems = [
             SettingItem(
                 icon: UIImage(systemName: "doc.text.magnifyingglass"),
-                title: "Language",
-                subtitle: "Change Language.",
+                title: "settings_language_title".localized,
+                subtitle: "settings_language_desc".localized,
                 docUrl: "",
                 type: .actionSheet
             ),
             SettingItem(
                 icon: UIImage(systemName: "lock.fill"),
-                title: "Gizlilik Politikası",
-                subtitle: "Verileriniz güvende, belgeye göz atın.",
+                title: "settings_privacy_title".localized,
+                subtitle: "settings_privacy_desc".localized,
                 docUrl: "https://www.morchat.net/gizlilik-politikasi.html",
                 type: .normal
             ),
             SettingItem(
                 icon: UIImage(systemName: "doc.text.magnifyingglass"),
-                title: "Kvkk Belgesi",
-                subtitle: "Tüm işlemlerimiz KVKK uyumludur, belgeye göz atın.",
+                title: "settings_kvkk_title".localized,
+                subtitle: "settings_kvkk_desc".localized,
                 docUrl: "https://www.morchat.net/kullanim-sartlari.html",
                 type: .normal
             ),
             SettingItem(
                 icon: UIImage(systemName: "lock.fill"),
-                title: "Permissions",
-                subtitle: "",
+                title: "settings_permissions_title".localized,
+                subtitle: "settings_permissions_desc".localized,
                 docUrl: "",
                 type: .normal
             )
         ]
         
         let sectionSettings = [
-            SectionSettings(title: "Bildirimler", items: notifyitems),
-            SectionSettings(title: "Ayarlar", items: settingsitems)
+            SectionSettings(title: "settings_section_notif".localized, items: notifyitems),
+            SectionSettings(title: "settings_section_general".localized, items: settingsitems)
         ]
         
         self.output?.configureSectionItems(sectionSettings)

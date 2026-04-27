@@ -47,7 +47,7 @@ final class ProfileSectionCell: UITableViewCell {
     
     private let editButton: UIButton = {
         let b = UIButton(type: .system)
-        b.setTitle("Edit", for: .normal)
+        b.setTitle("pub_prof_edit".localized, for: .normal)
         b.setTitleColor(.white, for: .normal)
         b.titleLabel?.font = .systemFont(ofSize: 12, weight: .bold)
         b.backgroundColor = UIColor.systemPink
@@ -117,7 +117,7 @@ final class ProfileSectionCell: UITableViewCell {
         onEditTapped?()
     }
     
-    func configure(title: String, subtitle: String?, content: String?, tags: [String]? = nil, buttonTitle: String? = "Edit", isButtonHidden: Bool = false) {
+    func configure(title: String, subtitle: String?, content: String?, tags: [String]? = nil, buttonTitle: String? = "pub_prof_edit".localized, isButtonHidden: Bool = false) {
         titleLabel.text = title
         subtitleLabel.text = subtitle
         contentLabel.text = content
@@ -146,8 +146,10 @@ final class ProfileSectionCell: UITableViewCell {
     
     private func createTagPill(_ text: String) -> UIView {
         let v = UIView()
-        v.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        v.backgroundColor = UIColor(red: 0.85, green: 0.35, blue: 0.45, alpha: 0.3)
         v.layer.cornerRadius = 6
+        v.layer.borderWidth = 0.5
+        v.layer.borderColor = UIColor(red: 0.85, green: 0.35, blue: 0.45, alpha: 0.6).cgColor
         let l = UILabel()
         l.text = text
         l.textColor = .white

@@ -27,6 +27,9 @@
 "login_guide" = "Rehber Girişi";
 "login_error_title" = "HATA";
 "login_error_terms" = "Devam etmek için tüm şartları kabul etmelisiniz.";
+"login_error_email" = "Lütfen e-posta adresinizi girin.";
+"login_error_password" = "Lütfen şifrenizi girin.";
+"common_ok" = "Tamam";
 
 // MARK: - Guide Login
 "login_guide_subtitle" = "Rehber hesabınıza giriş yapın";
@@ -39,10 +42,54 @@
 "become_guide_title" = "Rehber Olmak İster Misiniz?";
 "become_guide_subtitle" = "Rehberler yayın sürelerine göre para kazanabilirler. Siz de rehber olmak istiyorsanız bize ulaşın!";
 "become_guide_select_topics" = "Yayın konularınızı seçin (en az 1, en fazla 5)";
-"become_guide_name_placeholder" = "Ad Soyad";
-"become_guide_phone_placeholder" = "5XX-XXX-XX-XX";
-"become_guide_insta_placeholder" = "Instagram kullanıcı adı veya profil linki";
-"become_guide_apply" = "Başvur";
+"become_guide_name_placeholder" = "Adınız ve Soyadınız";
+"become_guide_phone_placeholder" = "Telefon Numaranız";
+"become_guide_insta_placeholder" = "Instagram Profil Adresiniz";
+"become_guide_apply" = "Başvuruyu Tamamla";
+
+// MARK: - Apply Actions
+"apply_error_topic" = "Lütfen en az bir konu seçin.";
+"apply_error_name" = "Lütfen adınızı ve soyadınızı girin.";
+"apply_error_phone" = "Lütfen telefon numaranızı girin.";
+"apply_error_insta" = "Lütfen Instagram profil adresinizi girin.";
+"apply_sending" = "Gönderiliyor...";
+"apply_error_submit" = "Başvuru gönderilirken hata oluştu: %@";
+"apply_success_title" = "Başarılı";
+"apply_success_message" = "Başvurunuz başarıyla alındı.";
+"apply_missing_title" = "Eksik Bilgi";
+
+// MARK: - Countries
+"country_tr" = "Türkiye";
+"country_de" = "Almanya";
+"country_uk" = "İngiltere";
+"country_fr" = "Fransa";
+"country_al" = "Arnavutluk";
+
+// MARK: - Tags
+"tag_spiritual" = "Manevi Sohbetler";
+"tag_dream" = "Rüya Tabiri";
+"tag_mystery" = "Gizem";
+"tag_books" = "Kitaplar";
+"tag_poetry" = "Şiir";
+"tag_astrology" = "Astroloji";
+"tag_psychology" = "Psikoloji";
+"tag_love" = "Aşk";
+"tag_travel" = "Gezi";
+"tag_romance" = "Romantizm";
+"tag_martial_arts" = "Dövüş Sanatları";
+"tag_real_estate" = "Emlak";
+"tag_health" = "Sağlık";
+"tag_economy" = "Ekonomi";
+"tag_technology" = "Teknoloji";
+"tag_plumber" = "Tesisatçı";
+"tag_electrician" = "Elektrikçi";
+"tag_beauty" = "Güzellik / Kozmetik";
+"tag_child" = "Çocuk Gelişimi";
+"tag_music" = "Müzik";
+"tag_cars" = "Arabalar";
+"tag_food" = "Yemek";
+"tag_fashion" = "Moda";
+"tag_football" = "Futbol";
 
 // MARK: - OTP Screen
 "otp_title" = "Doğrulama Kodu";
@@ -77,6 +124,7 @@
 "tab_favorites" = "Beğeniler";
 "tab_notifications" = "Bildirimler";
 "tab_profile" = "Hesabım";
+"tab_history" = "Geçmiş";
 
 // MARK: - Profile Screen
 "profile_title" = "Hesabım";
@@ -95,9 +143,11 @@
 
 // MARK: - Notifications
 "notif_title" = "Bildirimler";
-"notif_subtitle" = "Cevapsız aramalar ve Sürprizler bu ekrandadır";
-"notif_empty_title" = "Liste Boş";
-"notif_empty_desc" = "Bir yayıncı sohbet etmek için seni arayıp ulaşamazsa burada gösterilir.";
+"notif_subtitle" = "Cevapsız aramalar ve sürprizler bu ekranda";
+"notif_empty_title" = "Liste henüz boş";
+"notif_empty_desc" = "Eğer bir fısıltı gelirse ya da bir yayıncı seni arayıp ulaşamazsa burada görünecek.";
+"notif_default_title" = "Bildirim";
+"notif_now" = "Şimdi";
 
 // MARK: - Splash
 "splash_subtitle" = "Birebir özel canlı sohbet";
@@ -130,3 +180,92 @@
 "guide_home_welcome" = "Tekrar Hoşgeldin, Rehber!";
 "guide_status_online" = "Çevrimiçi Modu";
 "guide_home_info" = "Aramaları almak için çevrimiçi olduğunuzdan emin olun.";
+
+// MARK: - Story & Gallery
+"story_delete_title" = "Hikayeyi Sil";
+"story_delete_message" = "Bu hikayeyi silmek istediğinize emin misiniz?";
+"gallery_delete_title" = "Fotoğrafı Sil";
+"gallery_delete_message" = "Bu fotoğrafı galerinizden silmek istediğinize emin misiniz?";
+
+// MARK: - Photo Selection
+"photo_select_title" = "Görsel Seç";
+"photo_select_message" = "Lütfen bir kaynak seçin";
+"photo_source_camera" = "Kamera";
+"photo_source_gallery" = "Galeri";
+"photo_cancel" = "İptal";
+"photo_delete" = "Sil";
+"photo_success" = "Başarılı";
+"photo_error" = "Hata";
+"photo_update_success" = "Profil fotoğrafınız güncellendi.";
+"photo_update_error" = "Profil güncellenemedi: %@";
+
+// MARK: - Call Notifications
+"notif_video_call" = "Görüntülü Arama";
+"notif_voice_call" = "Sesli Arama";
+"notif_calling_body" = "%@ seni arıyor...";
+
+// MARK: - Wallet
+"wallet_coins" = "Jetonlarım: %d";
+"wallet_coins_enough" = "Sohbetlerinize devam etmek için yeterli jetonunuz var.";
+"wallet_coins_not_enough" = "Jetonunuz kalmadı. Şimdi yükleyin ve sohbete kaldığınız yerden devam edin...";
+"wallet_buy_button" = "Jeton Satın Al";
+"wallet_free_banner" = "Ücretsiz Jeton Fırsatı";
+"wallet_ad_limit" = "Günlük 5 reklam limitine ulaştınız. Yarın tekrar deneyin!";
+
+// MARK: - In-App Purchase
+"iap_screen_title" = "Jeton Satın Al";
+"iap_restore_button" = "Geri Yükle";
+"iap_products_empty" = "Ürünler şu anda yüklenemedi. Lütfen kısa süre sonra tekrar deneyin.";
+"iap_success_title" = "Satın Alma";
+"iap_error_title" = "Satın Alma Hatası";
+"iap_token_amount" = "%d Jeton";
+"iap_badge_popular" = "Popüler";
+"iap_purchase_success_message" = "%d jeton cüzdanınıza eklendi.";
+"iap_purchase_pending_message" = "Satın alma işleminiz onay bekliyor. Apple onayladığında jetonlarınız yüklenecek.";
+"iap_restore_success_message" = "Geri yükleme tamamlandı. Bekleyen satın alımlar varsa cüzdanınıza işlendi.";
+"iap_error_payments_unavailable" = "Bu cihazda uygulama içi satın alma kullanılamıyor.";
+"iap_error_product_unavailable" = "Bu ürün şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
+"iap_error_unknown_product" = "Seçilen jeton paketi doğru yapılandırılmamış.";
+"iap_error_verification_failed" = "Apple bu işlemi doğrulayamadı.";
+"iap_error_login_required" = "Satın alma yapmadan önce giriş yapmalısınız.";
+
+// MARK: - Favorite & Block Actions
+"fav_added_title" = "✅ Favorilere Eklendi";
+"fav_added_message" = "%@ favorilerinize eklendi!";
+"fav_removed_title" = "Favorilerden Çıkarıldı";
+"fav_removed_message" = "%@ favorilerinizden çıkarıldı.";
+"block_success_title" = "Engellendi";
+"block_success_message" = "%@ başarıyla engellendi.";
+"block_failed_message" = "Engelleme işlemi başarısız oldu.";
+
+// MARK: - Settings Screen
+"settings_notif_allow_title" = "Bildirim İzinleri";
+"settings_notif_allow_desc" = "Kapalı olursa özel canlı yayınları kaçırabilirsin.";
+"settings_language_title" = "Dil";
+"settings_language_desc" = "Uygulama dilini değiştir.";
+"settings_privacy_title" = "Gizlilik Politikası";
+"settings_privacy_desc" = "Verileriniz güvende, belgeye göz atın.";
+"settings_kvkk_title" = "KVKK Belgesi";
+"settings_kvkk_desc" = "Tüm işlemlerimiz KVKK uyumludur, belgeye göz atın.";
+"settings_permissions_title" = "İzinler";
+"settings_permissions_desc" = "Uygulama izinlerini yönet.";
+"settings_section_notif" = "Bildirimler";
+"settings_section_general" = "Ayarlar";
+
+// MARK: - Publisher Profile
+"pub_prof_stories" = "Hikayelerim";
+"pub_prof_gallery" = "Galeri";
+"pub_prof_interests" = "İlgi Alanları / Etiketler";
+"pub_prof_about" = "Hakkımda";
+"pub_prof_nickname" = "Kullanıcı Adı / Yaş";
+"pub_prof_phone" = "Telefon Numarası";
+"pub_prof_notif" = "Bildirim İzinleri";
+"pub_prof_email" = "E-posta";
+"pub_prof_edit" = "Düzenle";
+"pub_prof_notif_allowed" = "Bildirimlere izin veriliyor";
+"pub_prof_stories_desc" = "Yayınladığınız hikayeleri buradan yönetebilirsiniz.";
+"pub_prof_gallery_desc" = "Profilinizde görünecek fotoğrafları buradan yönetebilirsiniz.";
+"pub_prof_interests_desc" = "Yayınlarınızın konusunu belirten etiketler.\nSeçtiğiniz alan dışında yayın yapmanız önerilmez.";
+"pub_prof_about_desc" = "Kendinizi tanıtan kısa bir metin.";
+"pub_prof_notif_desc" = "Kapalı olursa yayın isteklerini kaçırabilirsiniz.";
+"pub_prof_error_title" = "Hata";

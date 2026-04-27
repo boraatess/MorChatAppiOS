@@ -64,7 +64,7 @@ extension GuideHomeViewController: GuideHomeViewModelOutput {
     }
     
     func didFail(with error: String) {
-        showAutoDismissAlert(title: "Error", message: error, duration: 2.0)
+        showAutoDismissAlert(title: "home_error_title".localized, message: error, duration: 2.0)
     }
 }
 
@@ -80,7 +80,7 @@ extension GuideHomeViewController: UICollectionViewDelegate, UICollectionViewDat
         let watcher = watchers[indexPath.row]
         
         let cardModel = UserCardModel(
-            name: watcher.name ?? "User",
+            name: watcher.name ?? "pub_name_unknown".localized,
             age: watcher.age,
             imageURL: watcher.photoURL,
             status: watcher.status,

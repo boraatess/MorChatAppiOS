@@ -13,6 +13,7 @@ final class LocalizationManager {
         set {
             UserDefaults.standard.set(newValue, forKey: languageKey)
             updateBundle(language: newValue)
+            NotificationCenter.default.post(name: .languageChanged, object: nil)
         }
     }
     
@@ -34,4 +35,8 @@ final class LocalizationManager {
     func localizedString(for key: String) -> String {
         return bundle.localizedString(forKey: key, value: nil, table: nil)
     }
+}
+
+extension Notification.Name {
+    static let languageChanged = Notification.Name("languageChanged")
 }

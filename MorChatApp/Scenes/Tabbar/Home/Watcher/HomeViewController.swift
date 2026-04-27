@@ -29,6 +29,22 @@ class HomeViewController: BaseVC {
         return cv
     }()
 
+    private lazy var storiesCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.itemSize = CGSize(width: 72, height: 90)
+        layout.minimumInteritemSpacing = 12
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        
+        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        cv.backgroundColor = .clear
+        cv.showsHorizontalScrollIndicator = false
+        cv.register(HomeStoryCell.self, forCellWithReuseIdentifier: "HomeStoryCell")
+        cv.delegate = self
+        cv.dataSource = self
+        return cv
+    }()
+
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumInteritemSpacing = 6
@@ -45,7 +61,7 @@ class HomeViewController: BaseVC {
 
     // 🔥 TEK DATA SOURCE
     private var users: [UserCardModel] = []
-    
+    private var stories: [PublisherProfile] = []
     private var tags: [String] = []
     private var selectedTag: String?
 
@@ -65,20 +81,30 @@ class HomeViewController: BaseVC {
         // Refetch data each time screen appears to show updated interests/profile
         viewModel.viewDidLoad() 
     }
+
+    override func applyLocalization() {
+        viewModel.viewDidLoad()
+    }
 }
 
 private extension HomeViewController {
 
     func setupUI() {
+        view.addSubview(storiesCollectionView)
         view.addSubview(tagCollectionView)
         view.addSubview(collectionView)
         
-        tagCollectionView.snp.makeConstraints { make in
+        storiesCollectionView.snp.makeConstraints { make in
             make.top.equalTo(headerView.snp.bottom).offset(8)
+            make.leading.trailing.equalToSuperview()
+            make.height.equalTo(100)
+        }
+        
+        tagCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(storiesCollectionView.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(44)
         }
-        
         
         collectionView.snp.makeConstraints {
             $0.top.equalTo(tagCollectionView.snp.bottom).offset(8)
@@ -92,6 +118,9 @@ private extension HomeViewController {
 extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if collectionView == storiesCollectionView {
+            return stories.count
+        }
         if collectionView == tagCollectionView {
             return tags.count
         }
@@ -99,6 +128,13 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        if collectionView == storiesCollectionView {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeStoryCell", for: indexPath) as! HomeStoryCell
+            let storyUser = stories[indexPath.row]
+            cell.configure(with: storyUser)
+            return cell
+        }
         
         if collectionView == tagCollectionView {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TagFilterCell", for: indexPath) as! TagFilterCell
@@ -120,6 +156,19 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if collectionView == storiesCollectionView {
+            let user = stories[indexPath.row]
+            guard let storyUrls = user.stories?.compactMap({ $0.url }) else { return }
+            let vc = StoryDetailViewController(
+                storyUrls: storyUrls,
+                userName: user.name,
+                userProfilePic: user.profilePic
+            )
+            vc.modalPresentationStyle = .fullScreen // Hikayeler tam ekran olur genelde
+            self.present(vc, animated: true)
+            return
+        }
         
         if collectionView == tagCollectionView {
             let tag = tags[indexPath.row]
@@ -158,6 +207,26 @@ extension HomeViewController: HomeViewModelOutputprotocol {
         
         DispatchQueue.main.async {
             self.tagCollectionView.reloadData()
+        }
+    }
+    
+    func didFetchStories(_ stories: [PublisherProfile]) {
+        self.stories = stories
+        DispatchQueue.main.async {
+            self.storiesCollectionView.reloadData()
+            let isEmpty = stories.isEmpty
+            self.storiesCollectionView.isHidden = isEmpty
+            
+            // Layout güncelle (stories yoksa tamamen kapat ve tagCollectionView yukarı çıksın)
+            self.storiesCollectionView.snp.updateConstraints { make in
+                make.height.equalTo(isEmpty ? 0 : 100)
+                make.top.equalTo(self.headerView.snp.bottom).offset(isEmpty ? 0 : 8)
+            }
+            
+            // Animasyonla geçiş yaparsak daha şık durur
+            UIView.animate(withDuration: 0.3) {
+                self.view.layoutIfNeeded()
+            }
         }
     }
     
@@ -230,6 +299,60 @@ final class TagFilterCell: UICollectionViewCell {
         } else {
             contentView.backgroundColor = .clear
             contentView.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor
+        }
+    }
+}
+
+// MARK: - HomeStoryCell
+final class HomeStoryCell: UICollectionViewCell {
+    private let imageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.cornerRadius = 30
+        iv.layer.borderWidth = 2
+        iv.layer.borderColor = UIColor.systemPink.cgColor
+        iv.backgroundColor = .darkGray
+        return iv
+    }()
+    
+    private let nameLabel: UILabel = {
+        let l = UILabel()
+        l.textColor = .white
+        l.font = .systemFont(ofSize: 11, weight: .medium)
+        l.textAlignment = .center
+        return l
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        contentView.addSubview(imageView)
+        contentView.addSubview(nameLabel)
+        
+        imageView.snp.makeConstraints { make in
+            make.top.centerX.equalToSuperview()
+            make.size.equalTo(60)
+        }
+        
+        nameLabel.snp.makeConstraints { make in
+            make.top.equalTo(imageView.snp.bottom).offset(4)
+            make.leading.trailing.equalToSuperview().inset(4)
+        }
+    }
+    
+    required init?(coder: NSCoder) { fatalError() }
+    
+    func configure(with publisher: PublisherProfile) {
+        nameLabel.text = publisher.name
+        if let urlStr = publisher.profilePic, let url = URL(string: urlStr) {
+            // Profil resmini yükle (Kingfisher/SDWebImage yoksa basitçe)
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                if let data = data {
+                    DispatchQueue.main.async { self.imageView.image = UIImage(data: data) }
+                }
+            }.resume()
+        } else {
+            imageView.image = UIImage(systemName: "person.fill")
         }
     }
 }

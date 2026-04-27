@@ -170,6 +170,9 @@
 				en,
 				Base,
 				tr,
+				fr,
+				it,
+				de,
 			);
 			mainGroup = 3399E8392F20350F005C929A;
 			minimizedProjectReferenceProxies = 1;
@@ -227,6 +230,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MorChatApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MorChat;
+				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME) görüntülü görüşme yapabilmeniz ve profil fotoğrafı çekebilmeniz için kameranıza erişim ister.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "$(PRODUCT_NAME) sesli ve görüntülü görüşmelerde sesinizi iletebilmek için mikrofonunuza erişim ister.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_NAME) profil fotoğrafı seçebilmeniz için fotoğraf galerinize erişim ister.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -261,6 +267,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = MorChatApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = MorChat;
+				INFOPLIST_KEY_NSCameraUsageDescription = "$(PRODUCT_NAME) görüntülü görüşme yapabilmeniz ve profil fotoğrafı çekebilmeniz için kameranıza erişim ister.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "$(PRODUCT_NAME) sesli ve görüntülü görüşmelerde sesinizi iletebilmek için mikrofonunuza erişim ister.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "$(PRODUCT_NAME) profil fotoğrafı seçebilmeniz için fotoğraf galerinize erişim ister.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

@@ -2,6 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.167930901345-09vropccqh9lnr4g6oqqpgmj2km94sco</string>
+			</array>
+		</dict>
+	</array>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3066798903065241~9105470064</string>
+	<key>GIDClientID</key>
+	<string>167930901345-09vropccqh9lnr4g6oqqpgmj2km94sco.apps.googleusercontent.com</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -22,29 +37,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>voip</string>
 	</array>
-	<key>GIDClientID</key>
-	<string>167930901345-09vropccqh9lnr4g6oqqpgmj2km94sco.apps.googleusercontent.com</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.167930901345-09vropccqh9lnr4g6oqqpgmj2km94sco</string>
-			</array>
-		</dict>
-	</array>
-	<key>NSCameraUsageDescription</key>
-	<string>$(PRODUCT_NAME) görüntülü görüşme yapabilmeniz ve profil fotoğrafı çekebilmeniz için kameranıza erişim ister.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>$(PRODUCT_NAME) sesli ve görüntülü görüşmelerde sesinizi iletebilmek için mikrofonunuza erişim ister.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>$(PRODUCT_NAME) profil fotoğrafı seçebilmeniz için fotoğraf galerinize erişim ister.</string>
-    <key>GADApplicationIdentifier</key>
-    <string>ca-app-pub-3066798903065241~9105470064</string>
-    
 </dict>
 </plist>
-

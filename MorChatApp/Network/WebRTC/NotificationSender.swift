@@ -17,8 +17,8 @@ final class NotificationSender {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Bildirim İçeriği
-        let title = isVideo ? "Görüntülü Arama" : "Sesli Arama"
-        let body = "\(callerName) seni arıyor..."
+        let title = isVideo ? "notif_video_call".localized : "notif_voice_call".localized
+        let body = String(format: "notif_calling_body".localized, callerName)
         
         let payload: [String: Any] = [
             "to": token,

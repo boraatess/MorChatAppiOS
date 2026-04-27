@@ -27,6 +27,9 @@
 "login_guide" = "Guide Login";
 "login_error_title" = "ERROR";
 "login_error_terms" = "You must accept all terms to continue.";
+"login_error_email" = "Please enter your email.";
+"login_error_password" = "Please enter your password.";
+"common_ok" = "OK";
 
 // MARK: - Guide Login
 "login_guide_subtitle" = "Log in to your guide account";
@@ -39,10 +42,54 @@
 "become_guide_title" = "Do You Want to Become a Guide?";
 "become_guide_subtitle" = "Guides can earn money points based on their broadcast duration. If you want to become a guide too, contact us!";
 "become_guide_select_topics" = "Select your broadcast topics (min 1, max 5)";
-"become_guide_name_placeholder" = "Name Surname";
-"become_guide_phone_placeholder" = "5XX-XXX-XX-XX";
-"become_guide_insta_placeholder" = "Instagram username or profile URL";
-"become_guide_apply" = "Apply";
+"become_guide_name_placeholder" = "Full Name";
+"become_guide_phone_placeholder" = "Phone Number";
+"become_guide_insta_placeholder" = "Instagram Profile URL";
+"become_guide_apply" = "Complete Application";
+
+// MARK: - Apply Actions
+"apply_error_topic" = "Please select at least one topic.";
+"apply_error_name" = "Please enter your name and surname.";
+"apply_error_phone" = "Please enter your phone number.";
+"apply_error_insta" = "Please enter your Instagram profile URL.";
+"apply_sending" = "Sending...";
+"apply_error_submit" = "Error sending application: %@";
+"apply_success_title" = "Success";
+"apply_success_message" = "Your application has been successfully received.";
+"apply_missing_title" = "Missing Information";
+
+// MARK: - Countries
+"country_tr" = "Turkey";
+"country_de" = "Germany";
+"country_uk" = "United Kingdom";
+"country_fr" = "France";
+"country_al" = "Albania";
+
+// MARK: - Tags
+"tag_spiritual" = "Spiritual Talks";
+"tag_dream" = "Dream Interpretation";
+"tag_mystery" = "Mystery";
+"tag_books" = "Books";
+"tag_poetry" = "Poetry";
+"tag_astrology" = "Astrology";
+"tag_psychology" = "Psychology";
+"tag_love" = "Love";
+"tag_travel" = "Travel";
+"tag_romance" = "Romance";
+"tag_martial_arts" = "Martial Arts";
+"tag_real_estate" = "Real Estate";
+"tag_health" = "Health";
+"tag_economy" = "Economy";
+"tag_technology" = "Technology";
+"tag_plumber" = "Plumber";
+"tag_electrician" = "Electrician";
+"tag_beauty" = "Beauty / Cosmetics";
+"tag_child" = "Child Development";
+"tag_music" = "Music";
+"tag_cars" = "Cars";
+"tag_food" = "Food";
+"tag_fashion" = "Fashion";
+"tag_football" = "Football";
 
 // MARK: - OTP Screen
 "otp_title" = "Verification Code";
@@ -77,6 +124,7 @@
 "tab_favorites" = "Likes";
 "tab_notifications" = "Notifications";
 "tab_profile" = "My Account";
+"tab_history" = "History";
 
 // MARK: - Profile Screen
 "profile_title" = "My Account";
@@ -98,6 +146,8 @@
 "notif_subtitle" = "Missed calls and Surprises are on this screen";
 "notif_empty_title" = "List is Empty";
 "notif_empty_desc" = "If a publisher calls you and can't reach you, it will be shown here.";
+"notif_default_title" = "Notification";
+"notif_now" = "Now";
 
 // MARK: - Splash
 "splash_subtitle" = "One-on-one private live chat";
@@ -130,3 +180,92 @@
 "guide_home_welcome" = "Welcome Back, Guide!";
 "guide_status_online" = "Online Mode";
 "guide_home_info" = "Make sure you are online to receive calls.";
+
+// MARK: - Story & Gallery
+"story_delete_title" = "Delete Story";
+"story_delete_message" = "Are you sure you want to delete this story?";
+"gallery_delete_title" = "Delete Photo";
+"gallery_delete_message" = "Are you sure you want to delete this photo from your gallery?";
+
+// MARK: - Photo Selection
+"photo_select_title" = "Select Image";
+"photo_select_message" = "Please select a source";
+"photo_source_camera" = "Camera";
+"photo_source_gallery" = "Gallery";
+"photo_cancel" = "Cancel";
+"photo_delete" = "Delete";
+"photo_success" = "Success";
+"photo_error" = "Error";
+"photo_update_success" = "Profile photo updated.";
+"photo_update_error" = "Update failed: %@";
+
+// MARK: - Call Notifications
+"notif_video_call" = "Video Call";
+"notif_voice_call" = "Voice Call";
+"notif_calling_body" = "%@ is calling you...";
+
+// MARK: - Wallet
+"wallet_coins" = "My Coins: %d";
+"wallet_coins_enough" = "You have enough coins to continue your chats.";
+"wallet_coins_not_enough" = "You've run out of coins. Top up now and continue chatting!";
+"wallet_buy_button" = "Buy Coins";
+"wallet_free_banner" = "Free Coin Opportunity";
+"wallet_ad_limit" = "You have reached the daily limit of 5 ads. Try again tomorrow!";
+
+// MARK: - In-App Purchase
+"iap_screen_title" = "Buy Coins";
+"iap_restore_button" = "Restore";
+"iap_products_empty" = "Products could not be loaded right now. Please try again shortly.";
+"iap_success_title" = "Purchase";
+"iap_error_title" = "Purchase Error";
+"iap_token_amount" = "%d Coins";
+"iap_badge_popular" = "Popular";
+"iap_purchase_success_message" = "%d coins were added to your wallet.";
+"iap_purchase_pending_message" = "Your purchase is pending approval. We will add your coins once Apple confirms it.";
+"iap_restore_success_message" = "Restore completed. Any unfinished purchases were credited to your wallet.";
+"iap_error_payments_unavailable" = "In-app purchases are disabled on this device.";
+"iap_error_product_unavailable" = "This product is currently unavailable. Please try again later.";
+"iap_error_unknown_product" = "The selected coin package is not configured correctly.";
+"iap_error_verification_failed" = "Apple could not verify this transaction.";
+"iap_error_login_required" = "Please sign in before making a purchase.";
+
+// MARK: - Favorite & Block Actions
+"fav_added_title" = "✅ Added to Favorites";
+"fav_added_message" = "%@ has been added to your favorites!";
+"fav_removed_title" = "Removed from Favorites";
+"fav_removed_message" = "%@ has been removed from your favorites.";
+"block_success_title" = "Blocked";
+"block_success_message" = "%@ has been successfully blocked.";
+"block_failed_message" = "Blocking process failed.";
+
+// MARK: - Settings Screen
+"settings_notif_allow_title" = "Notification Permissions";
+"settings_notif_allow_desc" = "If turned off, you might miss private live streams.";
+"settings_language_title" = "Language";
+"settings_language_desc" = "Change the application language.";
+"settings_privacy_title" = "Privacy Policy";
+"settings_privacy_desc" = "Your data is safe, check the document.";
+"settings_kvkk_title" = "KVKK/GDPR Document";
+"settings_kvkk_desc" = "All our operations are KVKK compliant, check the document.";
+"settings_permissions_title" = "Permissions";
+"settings_permissions_desc" = "Manage application permissions.";
+"settings_section_notif" = "Notifications";
+"settings_section_general" = "Settings";
+
+// MARK: - Publisher Profile
+"pub_prof_stories" = "My Stories";
+"pub_prof_gallery" = "Gallery";
+"pub_prof_interests" = "Interests / Tags";
+"pub_prof_about" = "About Me";
+"pub_prof_nickname" = "Nickname / Age";
+"pub_prof_phone" = "Phone Number";
+"pub_prof_notif" = "Notification Permissions";
+"pub_prof_email" = "E-mail";
+"pub_prof_edit" = "Edit";
+"pub_prof_notif_allowed" = "Remote notifications allowed";
+"pub_prof_stories_desc" = "You can manage your published stories here.";
+"pub_prof_gallery_desc" = "You can manage photos that will appear on your profile here.";
+"pub_prof_interests_desc" = "Tags indicating the subject of your broadcasts.\nIt is not recommended to broadcast outside the area you selected here.";
+"pub_prof_about_desc" = "A short text introducing yourself.";
+"pub_prof_notif_desc" = "If off, you may miss broadcast requests.";
+"pub_prof_error_title" = "Error";

@@ -109,11 +109,13 @@ final class TokenCell: UITableViewCell {
     
     
     func configure(coins: Int) {
-        titleLabel.text = "Jetonlarım: \(coins)"
+        titleLabel.text = String(format: "wallet_coins".localized, coins)
+        actionButton.setTitle("wallet_buy_button".localized, for: .normal)
+        
         if coins > 0 {
-            descLabel.text = "Sohbetlerinize devam etmek için yeterli jetonunuz var."
+            descLabel.text = "wallet_coins_enough".localized
         } else {
-            descLabel.text = "Jetonunuz kalmadı. Şimdi yükleyin ve sohbete kaldığınız yerden devam edin..."
+            descLabel.text = "wallet_coins_not_enough".localized
         }
     }
     

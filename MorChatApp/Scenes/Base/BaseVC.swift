@@ -39,6 +39,26 @@ class BaseVC: UIViewController {
         layout()
         setupLoadingUI()
         setupGradient()
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handleLanguageChange), name: .languageChanged, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleCoinBalanceChange), name: .coinBalanceDidChange, object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleLanguageChange() {
+        applyLocalization()
+    }
+
+    @objc private func handleCoinBalanceChange() {
+        updateHeaderCoins()
+    }
+    
+    /// Subclasses should override this to refresh localized strings
+    func applyLocalization() {
+        // Default implementation does nothing
     }
     
     override func viewWillAppear(_ animated: Bool) {

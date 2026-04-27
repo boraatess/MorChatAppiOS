@@ -110,6 +110,12 @@ final class NotificationsVC: BaseVC {
         }
     }
     
+    override func applyLocalization() {
+        subHeaderView.configure(title: "notif_title".localized, subtitle: "notif_subtitle".localized)
+        configureEmptyState()
+        updateUI()
+    }
+    
 }
 
 extension NotificationsVC: NotifiesViewModelOutputProtocol {
@@ -195,14 +201,14 @@ final class NotificationCell: UICollectionViewCell {
     }
     
     func configure(with model: NotificationModel) {
-        titleLabel.text = model.title ?? "Bildirim"
+        titleLabel.text = model.title ?? "notif_default_title".localized
         messageLabel.text = model.message ?? ""
         if let ts = model.timestamp {
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:mm"
             timeLabel.text = formatter.string(from: ts)
         } else {
-            timeLabel.text = "Şimdi"
+            timeLabel.text = "notif_now".localized
         }
     }
 }

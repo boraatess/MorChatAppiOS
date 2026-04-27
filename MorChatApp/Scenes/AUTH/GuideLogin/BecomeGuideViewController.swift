@@ -222,22 +222,22 @@ final class BecomeGuideViewController: UIViewController {
     
     @objc private func applyTapped() {
         if selectedTopicsCount == 0 {
-            showAlert(message: "Please select at least one topic.")
+            showAlert(message: "apply_error_topic".localized)
             return
         }
         
         guard let name = nameField.textField.text, !name.isEmpty else {
-            showAlert(message: "Please enter your name and surname.")
+            showAlert(message: "apply_error_name".localized)
             return
         }
         
         guard let phone = phoneField.textField.text, !phone.isEmpty else {
-            showAlert(message: "Please enter your phone number.")
+            showAlert(message: "apply_error_phone".localized)
             return
         }
         
         guard let insta = instaField.textField.text, !insta.isEmpty else {
-            showAlert(message: "Please enter your Instagram profile URL.")
+            showAlert(message: "apply_error_insta".localized)
             return
         }
         
@@ -256,7 +256,7 @@ final class BecomeGuideViewController: UIViewController {
         
         // Show loading
         applyButton.isEnabled = false
-        applyButton.setTitle("Sending...", for: .normal)
+        applyButton.setTitle("apply_sending".localized, for: .normal)
         
         FirestoreService.shared.submitBecomeGuideForm(data: data) { [weak self] error in
             guard let self = self else { return }
@@ -264,12 +264,13 @@ final class BecomeGuideViewController: UIViewController {
             self.applyButton.setTitle("become_guide_apply".localized, for: .normal)
             
             if let error = error {
-                self.showAlert(message: "Error sending application: \(error.localizedDescription)")
+                let errorMsg = String(format: "apply_error_submit".localized, error.localizedDescription)
+                self.showAlert(message: errorMsg)
                 return
             }
             
-            let successAlert = UIAlertController(title: "Success", message: "Your application has been received.", preferredStyle: .alert)
-            successAlert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
+            let successAlert = UIAlertController(title: "apply_success_title".localized, message: "apply_success_message".localized, preferredStyle: .alert)
+            successAlert.addAction(UIAlertAction(title: "common_ok".localized, style: .default, handler: { _ in
                 self.dismiss(animated: true)
             }))
             self.present(successAlert, animated: true)
@@ -278,8 +279,8 @@ final class BecomeGuideViewController: UIViewController {
 
     
     private func showAlert(message: String) {
-        let alert = UIAlertController(title: "Missing Information", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        let alert = UIAlertController(title: "apply_missing_title".localized, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "common_ok".localized, style: .default))
         present(alert, animated: true)
     }
 
@@ -420,11 +421,11 @@ fileprivate final class CustomCountryPickerView: UIView {
     var onSelection: ((String, String) -> Void)?
     
     private let countries = [
-        ("Turkey (+90)", "+90", "🇹🇷"),
-        ("Germany (+49)", "+49", "🇩🇪"),
-        ("United Kingdom (+44)", "+44", "🇬🇧"),
-        ("France (+33)", "+33", "🇫🇷"),
-        ("Albania (+355)", "+355", "🇦🇱")
+        ("\("country_tr".localized) (+90)", "+90", "🇹🇷"),
+        ("\("country_de".localized) (+49)", "+49", "🇩🇪"),
+        ("\("country_uk".localized) (+44)", "+44", "🇬🇧"),
+        ("\("country_fr".localized) (+33)", "+33", "🇫🇷"),
+        ("\("country_al".localized) (+355)", "+355", "🇦🇱")
     ]
     
     private let stackView: UIStackView = {

@@ -1,6 +1,24 @@
 import Foundation
 import FirebaseFirestore
 
+struct StoryModel: Codable {
+    var id: String?
+    var url: String?
+    var timestamp: Int64?
+    var type: String?
+    var viewCount: Int?
+    
+    var dictionary: [String: Any] {
+        return [
+            "id": id ?? "",
+            "url": url ?? "",
+            "timestamp": timestamp ?? 0,
+            "type": type ?? "image",
+            "viewCount": viewCount ?? 0
+        ]
+    }
+}
+
 struct PublisherProfile: Codable {
     var id: String?
     var about: String?
@@ -16,6 +34,7 @@ struct PublisherProfile: Codable {
     var status: String?
     var tagList: [Int]?
     var photos: [String]?
+    var stories: [StoryModel]?
     var blockedWatcherList: [[String: String]]?
     
     // 🔥 Etiket Id'lerini tag string'ine dönüştürür (TagManager kullanır)

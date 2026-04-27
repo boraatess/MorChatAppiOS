@@ -417,45 +417,59 @@ extension ProfileViewController: InterestsSelectionDelegate {
 
 extension ProfileViewController: ProfileTableHeaderViewDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func profileHeaderDidTapPhoto() {
+        showImageSourceOptions()
+    }
+    
+    private func showImageSourceOptions() {
+        let alert = UIAlertController(title: "photo_select_title".localized, message: "photo_select_message".localized, preferredStyle: .actionSheet)
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            alert.addAction(UIAlertAction(title: "photo_source_camera".localized, style: .default) { _ in
+                self.openImagePicker(sourceType: .camera)
+            })
+        }
+        alert.addAction(UIAlertAction(title: "photo_source_gallery".localized, style: .default) { _ in
+            self.openImagePicker(sourceType: .photoLibrary)
+        })
+        alert.addAction(UIAlertAction(title: "photo_cancel".localized, style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func openImagePicker(sourceType: UIImagePickerController.SourceType) {
         let picker = UIImagePickerController()
         picker.delegate = self
         picker.allowsEditing = true
-        picker.sourceType = .photoLibrary
+        picker.sourceType = sourceType
         present(picker, animated: true)
     }
     
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true) // Picker'ı hemen kapatıyoruz
+        picker.dismiss(animated: true) 
         
-        guard let editedImage = info[.editedImage] as? UIImage,
+        guard let editedImage = (info[.editedImage] as? UIImage) ?? (info[.originalImage] as? UIImage),
               let uid = Auth.auth().currentUser?.uid else { return }
         
-        // 1. Loading göster
         self.showLoading()
         
-        // 2. Storage'a yükle
         StorageService.shared.uploadProfileImage(uid: uid, image: editedImage) { [weak self] result in
             guard let self = self else { return }
             
             switch result {
             case .success(let downloadURL):
-                // 3. Firestore'u güncelle
                 FirestoreService.shared.updateProfileImageURL(uid: uid, url: downloadURL) { error in
                     self.hideLoading()
                     if let error = error {
-                        self.showAlert(title: "Hata", message: "Profil güncellenemedi: \(error.localizedDescription)")
+                        self.showAlert(title: "photo_error".localized, message: String(format: "photo_update_error".localized, error.localizedDescription))
                     } else {
-                        // 4. UI'ı güncelle
                         if let header = self.tableView.tableHeaderView as? ProfileTableHeaderView {
                             header.setProfileImage(editedImage)
                         }
-                        self.showAlert(title: "Başarılı", message: "Profil fotoğrafınız güncellendi.")
+                        self.showAlert(title: "photo_success".localized, message: "photo_update_success".localized)
                     }
                 }
                 
             case .failure(let error):
                 self.hideLoading()
-                self.showAlert(title: "Hata", message: "Fotoğraf yüklenemedi: \(error.localizedDescription)")
+                self.showAlert(title: "photo_error".localized, message: error.localizedDescription)
             }
         }
     }

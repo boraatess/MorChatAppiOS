@@ -26,6 +26,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
                 
         FirebaseApp.configure()
+        CallManager.shared.start()
+        CoinManager.shared.start()
         
         MobileAds.shared.start(completionHandler: nil)
         
@@ -110,5 +112,13 @@ extension AppDelegate: UNUserNotificationCenterDelegate, MessagingDelegate {
         
         completionHandler()
     }
-}
 
+    // Handle background notifications
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        print("📩 Remote notification received in background: \(userInfo)")
+        
+        // Eğer bu bir arama bildirimi ise CallKit tetiklenebilir
+        
+        completionHandler(.newData)
+    }
+}

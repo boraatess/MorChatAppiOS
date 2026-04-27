@@ -28,32 +28,34 @@ final class SharedTagsCloudView: UIView {
     // Static shared categories updated from Firestore
     static var categories: [TagInfo] = []
     
-    static var defaultCategories: [TagInfo] = [
-        .init(id: 0, name: "Spiritual Talks", color: .systemTeal, icon: "moon.stars.fill"),
-        .init(id: 1, name: "Dream", color: .systemPurple, icon: "cloud.fill"),
-        .init(id: 2, name: "Mystery", color: .darkGray, icon: "questionmark.circle.fill"),
-        .init(id: 3, name: "Books", color: .systemOrange, icon: "book.fill"),
-        .init(id: 4, name: "Poetry", color: .systemPink, icon: "pencil"),
-        .init(id: 5, name: "Astrology", color: .systemIndigo, icon: "stars"),
-        .init(id: 6, name: "Psychology", color: .systemYellow, icon: "brain.head.profile"),
-        .init(id: 7, name: "Love", color: .systemRed, icon: "heart.fill"),
-        .init(id: 8, name: "Travel", color: .orange, icon: "airplane"),
-        .init(id: 9, name: "Romance", color: .systemPink, icon: "heart.text.square.fill"),
-        .init(id: 10, name: "Martial Arts", color: .red, icon: "bolt.fill"),
-        .init(id: 11, name: "Real Estate", color: .brown, icon: "house.fill"),
-        .init(id: 12, name: "Health", color: .systemGreen, icon: "heart.circle.fill"),
-        .init(id: 13, name: "Economy", color: .cyan, icon: "chart.bar.fill"),
-        .init(id: 14, name: "Technology", color: .systemBlue, icon: "cpu"),
-        .init(id: 15, name: "Plumber", color: .systemBlue, icon: "wrench.fill"),
-        .init(id: 16, name: "Electrician", color: .systemOrange, icon: "bolt.fill"),
-        .init(id: 17, name: "Beauty / Cosmetics", color: .systemPink, icon: "sparkles"),
-        .init(id: 18, name: "Child Development", color: .orange, icon: "face.smiling.fill"),
-        .init(id: 19, name: "Music", color: .systemBlue, icon: "music.note"),
-        .init(id: 20, name: "Cars", color: .gray, icon: "car.fill"),
-        .init(id: 21, name: "Food", color: .systemGreen, icon: "fork.knife"),
-        .init(id: 22, name: "Fashion", color: .systemPink, icon: "bag.fill"),
-        .init(id: 23, name: "Football", color: .systemGreen, icon: "figure.soccer")
-    ]
+    static var defaultCategories: [TagInfo] {
+        return [
+            .init(id: 0, name: "tag_spiritual".localized, color: .systemTeal, icon: "moon.stars.fill"),
+            .init(id: 1, name: "tag_dream".localized, color: .systemPurple, icon: "cloud.fill"),
+            .init(id: 2, name: "tag_mystery".localized, color: .darkGray, icon: "questionmark.circle.fill"),
+            .init(id: 3, name: "tag_books".localized, color: .systemOrange, icon: "book.fill"),
+            .init(id: 4, name: "tag_poetry".localized, color: .systemPink, icon: "pencil"),
+            .init(id: 5, name: "tag_astrology".localized, color: .systemIndigo, icon: "stars"),
+            .init(id: 6, name: "tag_psychology".localized, color: .systemYellow, icon: "brain.head.profile"),
+            .init(id: 7, name: "tag_love".localized, color: .systemRed, icon: "heart.fill"),
+            .init(id: 8, name: "tag_travel".localized, color: .orange, icon: "airplane"),
+            .init(id: 9, name: "tag_romance".localized, color: .systemPink, icon: "heart.text.square.fill"),
+            .init(id: 10, name: "tag_martial_arts".localized, color: .red, icon: "bolt.fill"),
+            .init(id: 11, name: "tag_real_estate".localized, color: .brown, icon: "house.fill"),
+            .init(id: 12, name: "tag_health".localized, color: .systemGreen, icon: "heart.circle.fill"),
+            .init(id: 13, name: "tag_economy".localized, color: .cyan, icon: "chart.bar.fill"),
+            .init(id: 14, name: "tag_technology".localized, color: .systemBlue, icon: "cpu"),
+            .init(id: 15, name: "tag_plumber".localized, color: .systemBlue, icon: "wrench.fill"),
+            .init(id: 16, name: "tag_electrician".localized, color: .systemOrange, icon: "bolt.fill"),
+            .init(id: 17, name: "tag_beauty".localized, color: .systemPink, icon: "sparkles"),
+            .init(id: 18, name: "tag_child".localized, color: .orange, icon: "face.smiling.fill"),
+            .init(id: 19, name: "tag_music".localized, color: .systemBlue, icon: "music.note"),
+            .init(id: 20, name: "tag_cars".localized, color: .gray, icon: "car.fill"),
+            .init(id: 21, name: "tag_food".localized, color: .systemGreen, icon: "fork.knife"),
+            .init(id: 22, name: "tag_fashion".localized, color: .systemPink, icon: "bag.fill"),
+            .init(id: 23, name: "tag_football".localized, color: .systemGreen, icon: "figure.soccer")
+        ]
+    }
     
     private var selectedTags = Set<String>()
     private var buttons = [UIButton]()

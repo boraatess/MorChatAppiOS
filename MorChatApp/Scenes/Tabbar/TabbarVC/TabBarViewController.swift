@@ -21,6 +21,15 @@ class TabBarViewController: UITabBarController {
         setupTabBar()
         setupTabBarItemsInsets()
         
+        NotificationCenter.default.addObserver(self, selector: #selector(languageChanged), name: .languageChanged, object: nil)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func languageChanged() {
+        updateTabBarTitles()
     }
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -82,8 +91,8 @@ class TabBarViewController: UITabBarController {
         DispatchQueue.main.async {
             guard let items = self.tabBar.items else { return }
             for item in items {
-                item.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: -2)
-                item.imageInsets = UIEdgeInsets(top: 6, left: 8, bottom: -6, right: -8)
+                item.titlePositionAdjustment = UIOffset(horizontal: 0, vertical: 0)
+                item.imageInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
             }
         }
     }
@@ -98,7 +107,7 @@ class TabBarViewController: UITabBarController {
         let homeVC = BaseNavigationController(rootViewController: homeRoot)
         homeVC.navigationBar.isHidden = true
         homeVC.tabBarItem = UITabBarItem(
-            title: "Home",
+            title: "tab_home".localized,
             image: UIImage(named: "morchat_logo")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "morchat_logo")?.withRenderingMode(.alwaysTemplate)
         )
@@ -107,7 +116,7 @@ class TabBarViewController: UITabBarController {
         let notifiesController = BaseNavigationController(rootViewController: NotificationsVC())
         notifiesController.navigationBar.isHidden = true
         notifiesController.tabBarItem = UITabBarItem(
-            title: "Notifications",
+            title: "tab_notifications".localized,
             image: UIImage(named: "notifications")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "notifications")?.withRenderingMode(.alwaysTemplate)
         )
@@ -116,7 +125,7 @@ class TabBarViewController: UITabBarController {
         let publicationHistory = BaseNavigationController(rootViewController: PublicationHistoryVC())
         publicationHistory.navigationBar.isHidden = true
         publicationHistory.tabBarItem = UITabBarItem(
-            title: "History",
+            title: "tab_history".localized,
             image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate)
         )
@@ -125,7 +134,7 @@ class TabBarViewController: UITabBarController {
         let userProfileController = BaseNavigationController(rootViewController: ProfileViewController())
         userProfileController.navigationBar.isHidden = true
         userProfileController.tabBarItem = UITabBarItem(
-            title: "Profile",
+            title: "tab_profile".localized,
             image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate)
         )
@@ -134,7 +143,7 @@ class TabBarViewController: UITabBarController {
         let publisherProfile = BaseNavigationController(rootViewController: PublisherProfileVC())
         publisherProfile.navigationBar.isHidden = true
         publisherProfile.tabBarItem = UITabBarItem(
-            title: "My Account",
+            title: "tab_profile".localized,
             image: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(named: "account_circle")?.withRenderingMode(.alwaysTemplate)
         )
@@ -151,7 +160,7 @@ class TabBarViewController: UITabBarController {
             let favsController = BaseNavigationController(rootViewController: FavoritesViewController())
             favsController.navigationBar.isHidden = true
             favsController.tabBarItem = UITabBarItem(
-                title: "Favorites",
+                title: "tab_favorites".localized,
                 image: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate),
                 selectedImage: UIImage(named: "favorite")?.withRenderingMode(.alwaysTemplate)
             )
@@ -162,6 +171,23 @@ class TabBarViewController: UITabBarController {
                 favsController,
                 userProfileController
             ]
+        }
+    }
+    
+    private func updateTabBarTitles() {
+        guard let viewControllers = viewControllers else { return }
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        
+        if userType == "guide" {
+            viewControllers[0].tabBarItem.title = "tab_home".localized
+            viewControllers[1].tabBarItem.title = "tab_notifications".localized
+            viewControllers[2].tabBarItem.title = "tab_history".localized
+            viewControllers[3].tabBarItem.title = "tab_profile".localized
+        } else {
+            viewControllers[0].tabBarItem.title = "tab_home".localized
+            viewControllers[1].tabBarItem.title = "tab_notifications".localized
+            viewControllers[2].tabBarItem.title = "tab_favorites".localized
+            viewControllers[3].tabBarItem.title = "tab_profile".localized
         }
     }
 }

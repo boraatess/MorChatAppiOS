@@ -243,12 +243,12 @@ final class GuideLoginViewController: UIViewController {
     
     @objc private func loginTapped() {
         guard let email = emailField.textField.text, !email.isEmpty else {
-            showAlert(message: "Please enter your email")
+            showAlert(message: "login_error_email".localized)
             return
         }
         
         guard let password = passwordField.textField.text, !password.isEmpty else {
-            showAlert(message: "Please enter your password")
+            showAlert(message: "login_error_password".localized)
             return
         }
         
@@ -273,7 +273,7 @@ final class GuideLoginViewController: UIViewController {
     
     private func showAlert(message: String) {
         let alert = UIAlertController(title: "login_error_title".localized, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        alert.addAction(UIAlertAction(title: "common_ok".localized, style: .default))
         present(alert, animated: true)
     }
     
