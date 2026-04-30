@@ -15,7 +15,7 @@ class TabBarViewController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .black
+        view.backgroundColor = UIColor.App.screenBackground
         
         setupAppearance()
         setupTabBar()
@@ -43,7 +43,7 @@ class TabBarViewController: UITabBarController {
         appearance.configureWithOpaqueBackground()
         
         // 🔥 ARKA PLAN SİYAH
-        appearance.backgroundColor = .black
+        appearance.backgroundColor = UIColor.App.tabbarBgColor
         appearance.shadowColor = .clear
         appearance.backgroundEffect = nil
         
@@ -79,9 +79,9 @@ class TabBarViewController: UITabBarController {
         ]
         
         // ✅ Seçili olmayan item
-        itemAppearance.normal.iconColor = .white
+        itemAppearance.normal.iconColor = UIColor.App.secondaryText
         itemAppearance.normal.titleTextAttributes = [
-            .foregroundColor: UIColor.white,
+            .foregroundColor: UIColor.App.secondaryText,
             .font: UIFont.systemFont(ofSize: 12, weight: .regular)
         ]
     }
@@ -208,4 +208,3 @@ class TabBarViewController: UITabBarController {
  | Beğeniler   | `heart` / `heart.fill`   |
  | Hesabım     | `person` / `person.fill` |
 */
-

@@ -42,7 +42,7 @@ final class AppRulesViewController: UIViewController {
     private func setupUI() {
         
         title = "menu_rules".localized
-        view.backgroundColor = UIColor.white
+        view.backgroundColor = UIColor.App.screenBackground
         
         view.addSubview(profileHeader)
 
@@ -69,6 +69,7 @@ final class AppRulesViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.backgroundColor = .clear
     }
     
 }

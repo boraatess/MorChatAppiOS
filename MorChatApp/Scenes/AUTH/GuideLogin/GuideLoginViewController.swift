@@ -1,7 +1,7 @@
 import UIKit
 import SnapKit
 
-final class GuideLoginViewController: UIViewController {
+final class GuideLoginViewController: BaseVC {
 
     private let gradientLayer = CAGradientLayer()
     
@@ -95,9 +95,21 @@ final class GuideLoginViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        headerView.isHidden = true
         setupUI()
         setupConstraints()
         setupActions()
+    }
+    
+    override func setupGradient() {
+        // Core Gradient
+        gradientLayer.colors = [
+            UIColor(red: 0.55, green: 0.1, blue: 0.8, alpha: 1.0).cgColor,
+            UIColor(red: 0.35, green: 0.1, blue: 0.65, alpha: 1.0).cgColor
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0, y: 1)
+        view.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     override func viewDidLayoutSubviews() {
@@ -116,15 +128,6 @@ final class GuideLoginViewController: UIViewController {
     }
 
     private func setupUI() {
-        // Core Gradient
-        gradientLayer.colors = [
-            UIColor(red: 0.55, green: 0.1, blue: 0.8, alpha: 1.0).cgColor,
-            UIColor(red: 0.35, green: 0.1, blue: 0.65, alpha: 1.0).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0, y: 1)
-        view.layer.insertSublayer(gradientLayer, at: 0)
-        
         view.addSubview(backButton)
         view.addSubview(iconBackground)
         iconBackground.addSubview(iconImage)
@@ -253,7 +256,9 @@ final class GuideLoginViewController: UIViewController {
         }
         
         if checkTerms() {
+            showLoading()
             FirebaseAuthService.shared.signInWithEmail(email: email, password: password) { [weak self] result in
+                self?.hideLoading()
                 switch result {
                 case .success:
                     UserDefaults.standard.set("guide", forKey: "userType")

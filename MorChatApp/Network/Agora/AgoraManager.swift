@@ -55,9 +55,8 @@ class AgoraManager: NSObject {
     }
     
     func joinChannel(channelId: String) {
-        let forcedChannelId = "test" 
         print("🔑 Kullanılan Token (ilk 10 hane): \(tempToken.prefix(10))...")
-        print("📺 Katılınan Kanal: \(forcedChannelId)")
+        print("📺 Katılınan Kanal: \(channelId)")
         
         // Kanala girmeden önce önizlemeyi tekrar tetikle
         agoraKit?.startPreview()
@@ -69,7 +68,7 @@ class AgoraManager: NSObject {
         options.publishMicrophoneTrack = true
         options.clientRoleType = .broadcaster // <--- BEN YAYINCIYIM!
 
-        let result = agoraKit?.joinChannel(byToken: tempToken, channelId: forcedChannelId, uid: 0, mediaOptions: options) { [weak self] (channel, uid, elapsed) in
+        let result = agoraKit?.joinChannel(byToken: tempToken, channelId: channelId, uid: 0, mediaOptions: options) { [weak self] (channel, uid, elapsed) in
             print("✅✅✅ AGORA BAĞLANDI! Kanal: \(channel), UID: \(uid)")
             self?.delegate?.agoraManager(self!, didJoinedChannel: channel)
         }

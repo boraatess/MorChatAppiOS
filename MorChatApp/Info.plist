@@ -39,5 +39,13 @@
 		<string>remote-notification</string>
 		<string>voip</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Görüntülü görüşme yapabilmek için kameranıza erişmemiz gerekiyor.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Sesli görüşme yapabilmek için mikrofonunuza erişmemiz gerekiyor.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Profil fotoğrafı seçebilmeniz ve fotoğraf paylaşabilmeniz için galerinize erişmemiz gerekiyor.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Fotoğrafları galerinize kaydedebilmemiz için izninize ihtiyacımız var.</string>
 </dict>
 </plist>

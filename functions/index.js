@@ -89,22 +89,34 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
 
         // --- 4. Standart Bildirimi Gönder (Banner olarak görünmesi için) ---
         if (msgToken) {
+            const alertTitle = isVideo ? "Goruntulu Arama" : "Sesli Arama";
+            const alertBody = `${callerName} seni ariyor...`;
             const standardMessage = {
                 notification: {
-                    title: isVideo ? "Görüntülü Arama" : "Sesli Arama",
-                    body: `${callerName} seni arıyor...`,
+                    title: alertTitle,
+                    body: alertBody,
                 },
                 data: {
                     callId: event.params.callId,
+                    callerId: callerId,
+                    callerName: callerName,
                     isVideo: isVideo ? "true" : "false",
                     click_action: "CALL_ACTION"
                 },
                 token: msgToken,
                 apns: {
+                    headers: {
+                        "apns-priority": "10",
+                        "apns-push-type": "alert",
+                    },
                     payload: {
                         aps: {
+                            alert: {
+                                title: alertTitle,
+                                body: alertBody,
+                            },
                             sound: "default",
-                            badge: 1
+                            badge: 1,
                         }
                     }
                 }

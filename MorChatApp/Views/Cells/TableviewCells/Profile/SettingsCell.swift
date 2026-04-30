@@ -54,18 +54,21 @@ final class SettingTableViewCell: UITableViewCell {
         containerView.addSubview(toggleSwitch)
         
         containerView.layer.cornerRadius = 10
-        containerView.backgroundColor = .systemBackground
+        containerView.backgroundColor = UIColor.App.cardBackground
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = UIColor.App.border.cgColor
         
-        iconContainer.backgroundColor = UIColor.indigoPurple.withAlphaComponent(0.1)
+        iconContainer.backgroundColor = UIColor.indigoPurple.withAlphaComponent(0.18)
         iconContainer.layer.cornerRadius = 30
         
         iconImageView.tintColor = .indigoPurple
         iconImageView.contentMode = .scaleAspectFit
         
         titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = UIColor.App.primaryText
         
         subtitleLabel.font = .systemFont(ofSize: 14)
-        subtitleLabel.textColor = .gray
+        subtitleLabel.textColor = UIColor.App.secondaryText
         subtitleLabel.numberOfLines = 0
         
         toggleSwitch.onTintColor = .systemPurple

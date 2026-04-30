@@ -52,19 +52,23 @@ final class SettingsViewController: UIViewController {
     
     private func setupUI() {
         title = "menu_settings".localized
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.App.screenBackground
         
-        view.addSubview(profileHeader)
-        profileHeader.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
-            make.leading.trailing.equalToSuperview()
-            make.height.equalTo(50)
+        if profileHeader.superview == nil {
+            view.addSubview(profileHeader)
+            profileHeader.snp.makeConstraints { make in
+                make.top.equalTo(view.safeAreaLayoutGuide).offset(8)
+                make.leading.trailing.equalToSuperview()
+                make.height.equalTo(50)
+            }
         }
         
-        view.addSubview(tableView)
-        tableView.snp.makeConstraints { make in
-            make.top.equalTo(profileHeader.snp.bottom)
-            make.leading.trailing.bottom.equalToSuperview()
+        if tableView.superview == nil {
+            view.addSubview(tableView)
+            tableView.snp.makeConstraints { make in
+                make.top.equalTo(profileHeader.snp.bottom)
+                make.leading.trailing.bottom.equalToSuperview()
+            }
         }
         
         profileHeader.configure(with: "menu_settings".localized, image: "")
@@ -75,6 +79,7 @@ final class SettingsViewController: UIViewController {
         tableView.separatorStyle = .none
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.backgroundColor = .clear
     }    
     
 }
@@ -145,7 +150,7 @@ extension SettingsViewController: UITableViewDelegate, UITableViewDataSource {
         headerView.backgroundColor = .clear
         
         let label = UILabel(frame: CGRect(x: 16, y: 16, width: headerView.frame.width, height: 20))
-        label.textColor = .black
+        label.textColor = UIColor.App.primaryText
         label.numberOfLines = 0
         
         let section = sectionSettings[section]

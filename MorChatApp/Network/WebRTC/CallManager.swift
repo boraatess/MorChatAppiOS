@@ -68,19 +68,47 @@ final class CallManager: NSObject {
         incomingCallListener = nil
     }
     
-    private func handleIncomingCall(callId: String, callerId: String, isVideo: Bool) {
+    private func handleIncomingCall(callId: String, callerId: String, isVideo: Bool, callerName: String? = nil, completion: (() -> Void)? = nil) {
         // Eğer zaten bir arama aktifse veya sistem ekranı açıksa yeni gösterme
-        guard activeCallId == nil else { return }
+        guard activeCallId == nil else {
+            completion?()
+            return
+        }
         
+        // Önce hızlıca sistem ekranını göster (Apple kuralı: 5 saniye içinde raporlanmalı)
+        let initialName = callerName ?? "Arayan..."
+        let tempProfile = PublisherProfile(id: callerId, name: initialName)
+        
+        self.reportIncomingCallToSystem(callId: callId, profile: tempProfile, isVideo: isVideo) {
+            // Sistem ekranı gösterildikten sonra VoIP completion çağrılmalı
+            completion?()
+        }
+        
+        // Eğer isim gelmediyse veya daha fazla detay lazımsa arka planda profili çek ve güncelle
         FirestoreService.shared.fetchPublisherProfile(publisherId: callerId) { [weak self] result in
-            DispatchQueue.main.async {
-                let profile = (try? result.get()) ?? PublisherProfile.empty
-                self?.reportIncomingCallToSystem(callId: callId, profile: profile, isVideo: isVideo)
+            if let profile = try? result.get(), let self = self {
+                DispatchQueue.main.async {
+                    self.updateCallInfo(profile: profile)
+                }
             }
         }
     }
     
-    private func reportIncomingCallToSystem(callId: String, profile: PublisherProfile, isVideo: Bool) {
+    private func updateCallInfo(profile: PublisherProfile) {
+        guard let uuid = activeCallId else { return }
+        let update = CXCallUpdate()
+        update.remoteHandle = CXHandle(type: .generic, value: profile.name ?? "Bilinmeyen")
+        
+        // Aktif aramayı güncelle
+        provider.reportCall(with: uuid, updated: update)
+        
+        // Mevcut veri kaydını da güncelle
+        if let current = currentCallData {
+            currentCallData = (current.callId, profile, current.isVideo)
+        }
+    }
+    
+    private func reportIncomingCallToSystem(callId: String, profile: PublisherProfile, isVideo: Bool, completion: (() -> Void)? = nil) {
         let uuid = UUID()
         self.activeCallId = uuid
         self.currentCallData = (callId, profile, isVideo)
@@ -94,6 +122,7 @@ final class CallManager: NSObject {
                 print("❌ CallKit Error: \(error.localizedDescription)")
                 self?.activeCallId = nil
             }
+            completion?()
         }
     }
     
@@ -147,6 +176,14 @@ extension CallManager: CXProviderDelegate {
         }
         topVC.present(callVC, animated: true)
     }
+    
+    func provider(_ provider: CXProvider, didActivate audioSession: AVAudioSession) {
+        print("🔈 CallKit: Audio session activated.")
+    }
+    
+    func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {
+        print("🔈 CallKit: Audio session deactivated.")
+    }
 }
 
 // MARK: - PKPushRegistryDelegate (PushKit)
@@ -172,17 +209,23 @@ extension CallManager: PKPushRegistryDelegate {
     func pushRegistry(_ registry: PKPushRegistry, didReceiveIncomingPushWith payload: PKPushPayload, for type: PKPushType, completion: @escaping () -> Void) {
         
         let data = payload.dictionaryPayload
+        print("📩 VoIP Push Received: \(data)")
         
-        if let callId = data["callId"] as? String,
-           let callerId = data["callerId"] as? String {
-            
-            let isVideo = (data["video"] as? Bool) ?? true
-            
-            // Arka planda sistemi uyandırıp CallKit ekranını gösteriyoruz
-            handleIncomingCall(callId: callId, callerId: callerId, isVideo: isVideo)
+        // Payload'dan verileri çekiyoruz (Farklı key isimlerine karşı esnek olalım)
+        let callId = (data["callId"] as? String) ?? (data["callID"] as? String)
+        let callerId = (data["callerId"] as? String) ?? (data["callerID"] as? String)
+        let callerName = (data["callerName"] as? String) ?? (data["name"] as? String)
+        
+        var isVideo = true
+        if let v = data["video"] as? Bool { isVideo = v }
+        else if let v = data["isVideo"] as? Bool { isVideo = v }
+        else if let v = data["video"] as? String { isVideo = v.lowercased() == "true" }
+        
+        if let cId = callId, let crId = callerId {
+            handleIncomingCall(callId: cId, callerId: crId, isVideo: isVideo, callerName: callerName, completion: completion)
+        } else {
+            print("⚠️ VoIP Push missing required data (callId/callerId)")
+            completion()
         }
-        
-        // İşlem bittiğinde Apple'a bildiriyoruz
-        completion()
     }
 }

@@ -55,23 +55,25 @@ final class BuyTokenCell: UITableViewCell {
         containerView.addSubview(priceLabel)
         containerView.addSubview(discountLabel)
         
-        containerView.backgroundColor = .white
+        containerView.backgroundColor = UIColor.App.cardBackground
         containerView.layer.cornerRadius = 16
         
-        containerView.layer.shadowColor = UIColor.black.cgColor
+        containerView.layer.shadowColor = UIColor.App.shadow.cgColor
         containerView.layer.shadowOpacity = 0.08
         containerView.layer.shadowOffset = CGSize(width: 0, height: 4)
         containerView.layer.shadowRadius = 8
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = UIColor.App.border.cgColor
         
         iconImageView.image = UIImage(systemName: "arrow.2.circlepath.circle.fill")
-        iconImageView.tintColor = .systemOrange
+        iconImageView.tintColor = UIColor.appOrange
         iconImageView.contentMode = .scaleAspectFit
         
         titleLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        titleLabel.textColor = .black
+        titleLabel.textColor = UIColor.App.primaryText
         
         priceLabel.font = .systemFont(ofSize: 18, weight: .bold)
-        priceLabel.textColor = UIColor(red: 0.45, green: 0.35, blue: 0.75, alpha: 1)
+        priceLabel.textColor = UIColor.appLightPurple
         
         discountLabel.font = .systemFont(ofSize: 12, weight: .semibold)
         discountLabel.textColor = .white

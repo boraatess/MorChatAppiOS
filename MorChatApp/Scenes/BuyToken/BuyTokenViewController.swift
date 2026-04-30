@@ -3,20 +3,17 @@ import UIKit
 import SnapKit
 import SwiftUI
 
-final class BuyTokenViewController: UIViewController {
+final class BuyTokenViewController: BaseVC {
 
     private let viewModel = BuyTokenViewModel()
     private let tableView = UITableView()
-    private let activityIndicator = UIActivityIndicatorView(style: .large)
     private let emptyStateLabel = UILabel()
-    private let gradientLayer = CAGradientLayer()
 
     private var packages: [TokenPackage] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        setupGradient()
+        headerView.isHidden = true
         setupUI()
 
         viewModel.output = self
@@ -24,7 +21,7 @@ final class BuyTokenViewController: UIViewController {
 
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(handleCoinBalanceChange),
+            selector: #selector(handleCoinBalancedidChange),
             name: .coinBalanceDidChange,
             object: nil
         )
@@ -38,7 +35,7 @@ final class BuyTokenViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        gradientLayer.frame = view.bounds
+        
     }
 
     deinit {
@@ -49,7 +46,7 @@ final class BuyTokenViewController: UIViewController {
         viewModel.restorePurchases()
     }
 
-    @objc private func handleCoinBalanceChange() {
+    @objc private func handleCoinBalancedidChange() {
         tableView.reloadData()
     }
 }
@@ -62,9 +59,9 @@ extension BuyTokenViewController: BuytokenviewModelOutputProtocol {
         emptyStateLabel.isHidden = isLoading || !packages.isEmpty
 
         if isLoading {
-            activityIndicator.startAnimating()
+            showLoading()
         } else {
-            activityIndicator.stopAnimating()
+            hideLoading()
         }
     }
 
@@ -96,15 +93,10 @@ extension BuyTokenViewController {
         )
 
         view.addSubview(tableView)
-        view.addSubview(activityIndicator)
         view.addSubview(emptyStateLabel)
 
         tableView.snp.makeConstraints {
             $0.edges.equalToSuperview()
-        }
-
-        activityIndicator.snp.makeConstraints {
-            $0.center.equalToSuperview()
         }
 
         emptyStateLabel.snp.makeConstraints {
@@ -119,24 +111,12 @@ extension BuyTokenViewController {
         tableView.backgroundColor = .clear
         tableView.showsVerticalScrollIndicator = false
 
-        activityIndicator.color = .white
-        activityIndicator.hidesWhenStopped = true
-
         emptyStateLabel.text = "iap_products_empty".localized
         emptyStateLabel.font = .systemFont(ofSize: 15, weight: .medium)
-        emptyStateLabel.textColor = UIColor.white.withAlphaComponent(0.82)
+        emptyStateLabel.textColor = UIColor.App.secondaryText
         emptyStateLabel.numberOfLines = 0
         emptyStateLabel.textAlignment = .center
         emptyStateLabel.isHidden = true
-    }
-
-    private func setupGradient() {
-        gradientLayer.colors = [
-            UIColor(red: 48 / 255, green: 20 / 255, blue: 90 / 255, alpha: 1).cgColor,
-            UIColor(red: 95 / 255, green: 30 / 255, blue: 150 / 255, alpha: 1).cgColor
-        ]
-        gradientLayer.frame = view.bounds
-        view.layer.insertSublayer(gradientLayer, at: 0)
     }
 }
 
@@ -168,4 +148,5 @@ extension BuyTokenViewController: UITableViewDelegate, UITableViewDataSource {
 
 #Preview {
     BuyTokenViewController().asPreview()
+    
 }

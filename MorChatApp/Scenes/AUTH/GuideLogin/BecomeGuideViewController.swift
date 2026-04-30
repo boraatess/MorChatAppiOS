@@ -1,7 +1,7 @@
 import UIKit
 import SnapKit
 
-final class BecomeGuideViewController: UIViewController {
+final class BecomeGuideViewController: BaseVC {
 
     // MARK: - UI Elements
     private let scrollView: UIScrollView = {
@@ -79,6 +79,7 @@ final class BecomeGuideViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        headerView.isHidden = true
         setupUI()
         setupConstraints()
         setupActions()
@@ -87,14 +88,14 @@ final class BecomeGuideViewController: UIViewController {
         nameField.textField.delegate = self
         phoneField.textField.delegate = self
     }
-
-
-
     
+    override func setupGradient() {
+        // Keep it plain for this form
+        view.backgroundColor = UIColor(white: 0.98, alpha: 1.0)
+    }
+
     // MARK: - Setup UI
     private func setupUI() {
-        view.backgroundColor = UIColor(white: 0.98, alpha: 1.0)
-        
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
@@ -255,13 +256,11 @@ final class BecomeGuideViewController: UIViewController {
         ]
         
         // Show loading
-        applyButton.isEnabled = false
-        applyButton.setTitle("apply_sending".localized, for: .normal)
+        showLoading()
         
         FirestoreService.shared.submitBecomeGuideForm(data: data) { [weak self] error in
             guard let self = self else { return }
-            self.applyButton.isEnabled = true
-            self.applyButton.setTitle("become_guide_apply".localized, for: .normal)
+            self.hideLoading()
             
             if let error = error {
                 let errorMsg = String(format: "apply_error_submit".localized, error.localizedDescription)

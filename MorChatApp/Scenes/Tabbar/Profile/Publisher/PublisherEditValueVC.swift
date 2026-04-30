@@ -28,21 +28,23 @@ class PublisherEditValueVC: UIViewController {
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.font = .boldSystemFont(ofSize: 18)
-        l.textColor = .black
+        l.textColor = UIColor.App.primaryText
         return l
     }()
     
     private let textField: UITextField = {
         let tf = UITextField()
         tf.borderStyle = .roundedRect
-        tf.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+        tf.backgroundColor = UIColor.App.inputBackground
+        tf.textColor = UIColor.App.primaryText
         return tf
     }()
     
     private let textView: UITextView = {
         let tv = UITextView()
         tv.layer.cornerRadius = 8
-        tv.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
+        tv.backgroundColor = UIColor.App.inputBackground
+        tv.textColor = UIColor.App.primaryText
         tv.font = .systemFont(ofSize: 16)
         tv.isHidden = true
         return tv
@@ -71,7 +73,7 @@ class PublisherEditValueVC: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.App.screenBackground
         
         view.addSubview(titleLabel)
         view.addSubview(textField)

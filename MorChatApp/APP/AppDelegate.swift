@@ -20,6 +20,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     var scene: UIWindowScene?
     var appCoordinator: AppCoordinator?
+    private var authStateHandle: AuthStateDidChangeListenerHandle?
     
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -28,6 +29,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         FirebaseApp.configure()
         CallManager.shared.start()
         CoinManager.shared.start()
+        configureGlobalAppearance()
         
         MobileAds.shared.start(completionHandler: nil)
         
@@ -52,6 +54,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         application.registerForRemoteNotifications()
         
         Messaging.messaging().delegate = self
+        syncCurrentFCMTokenIfPossible()
+        observeAuthChanges()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
         
         return true
     }
@@ -69,8 +79,63 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
           )
       }
  
-    
+    deinit {
+        if let authStateHandle {
+            Auth.auth().removeStateDidChangeListener(authStateHandle)
+        }
+        NotificationCenter.default.removeObserver(self)
+    }
 
+    func applicationWillTerminate(_ application: UIApplication) {
+        SignalingClient.shared.endCall()
+        CallManager.shared.endCall()
+    }
+}
+
+private extension AppDelegate {
+    func configureGlobalAppearance() {
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = UIColor.App.screenBackground
+        navAppearance.titleTextAttributes = [.foregroundColor: UIColor.App.primaryText]
+        navAppearance.largeTitleTextAttributes = [.foregroundColor: UIColor.App.primaryText]
+        navAppearance.shadowColor = .clear
+
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+        UINavigationBar.appearance().tintColor = UIColor.App.primaryText
+
+        UITableView.appearance().backgroundColor = .clear
+    }
+
+    func observeAuthChanges() {
+        authStateHandle = Auth.auth().addStateDidChangeListener { _, user in
+            guard user != nil else { return }
+            self.syncCurrentFCMTokenIfPossible()
+        }
+    }
+
+    @objc func handleAppDidBecomeActive() {
+        syncCurrentFCMTokenIfPossible()
+    }
+
+    func syncCurrentFCMTokenIfPossible() {
+        guard Auth.auth().currentUser != nil else { return }
+
+        Messaging.messaging().token { token, error in
+            if let error {
+                print("FCM token fetch failed: \(error.localizedDescription)")
+                return
+            }
+
+            guard let token, !token.isEmpty else { return }
+
+            UserDefaults.standard.set(token, forKey: "fcm_token")
+            FirestoreService.shared.updateFCMToken(token: token)
+            print("FCM token synced to Firestore.")
+        }
+    }
 }
 
 // MARK: - UNUserNotificationCenterDelegate & MessagingDelegate

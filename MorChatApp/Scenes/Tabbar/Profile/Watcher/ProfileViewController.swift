@@ -13,14 +13,7 @@ import SwiftUI
 
 final class ProfileViewController: BaseVC {
 
-    private var selectedInterests: [InterestModel] = [] {
-        didSet {
-            let names = selectedInterests.map { $0.name }
-            UserDefaults.standard.set(names, forKey: "user_selected_interests")
-        }
-    }
-
-    private var currentUser: UserModel?
+    private let viewModel = ProfileViewModel()
 
     private lazy var tableView: UITableView = {
         let tv = UITableView(frame: .zero, style: .grouped)
@@ -51,16 +44,15 @@ final class ProfileViewController: BaseVC {
         
         view.backgroundColor = UIColor(red: 0.44, green: 0.20, blue: 0.55, alpha: 1.0)
         
+        viewModel.output = self
         setupUI()
-        loadSavedInterests()
         setupFooter()
 
-        
         let header = ProfileTableHeaderView(frame: CGRect(x: 0, y: 0, width: view.bounds.width, height: 120))
         header.delegate = self
         tableView.tableHeaderView = header
         
-        fetchProfile()
+        viewModel.fetchData()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -69,58 +61,11 @@ final class ProfileViewController: BaseVC {
         updateHeader()
     }
     
-    private func loadSavedInterests() {
-        if let savedNames = UserDefaults.standard.stringArray(forKey: "user_selected_interests") {
-            let restored = savedNames.compactMap { name -> InterestModel? in
-                if let category = SharedTagsCloudView.categories.first(where: { $0.name == name }) {
-                    return InterestModel(id: category.id, name: category.name, icon: category.icon ?? "", color: category.color)
-                }
-                return nil
-            }
-            // Temporarily disable the didSet observer side effect if needed, but here it's fine
-            // since assigning just overwrites UserDefaults with the same data
-            self.selectedInterests = restored
-        }
-    }
     
-    private func fetchProfile() {
-
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        
-        FirestoreService.shared.fetchUserProfile(uid: uid) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success(let user):
-                self.currentUser = user
-                
-                // Load remote interests into local state
-                if let remoteInterests = user.interests, !remoteInterests.isEmpty {
-                    let restored = remoteInterests.compactMap { name -> InterestModel? in
-                        if let category = SharedTagsCloudView.categories.first(where: { $0.name == name }) {
-                            return InterestModel(id: category.id, name: category.name, icon: category.icon ?? "", color: category.color)
-                        }
-                        return nil
-                    }
-                    self.selectedInterests = restored
-                }
-                
-                self.updateHeader()
-                self.tableView.reloadData()
-            case .failure(let error):
-                print("Error fetching profile: \(error)")
-            }
-        }
-        
-        print("🟢 DEBUG 1: Bağlanılan Proje ID: \(FirebaseOptions.defaultOptions()?.projectID ?? "Bilinmiyor")")
-        print("🟢 DEBUG 2: Paket ID: \(Bundle.main.bundleIdentifier ?? "Bilinmiyor")")
-        print("🟢 DEBUG 3: Kullanıcı UID: \(Auth.auth().currentUser?.uid ?? "Giriş Yok")")
-
-        
-    }
     
     private func updateHeader() {
         guard let header = tableView.tableHeaderView as? ProfileTableHeaderView,
-              let user = currentUser else { return }
+              let user = viewModel.currentUser else { return }
         
         header.setProfileImage(url: user.photoURL)
         
@@ -180,18 +125,7 @@ final class ProfileViewController: BaseVC {
     }
     
     private func performLogout() {
-        
-        FirebaseAuthService.shared.signOut()
-        
-        // Return to Login screen
-        // This is a common way to reset the app flow after logout
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let window = windowScene.windows.first {
-            let loginVC = LoginViewController()
-            let nav = BaseNavigationController(rootViewController: loginVC)
-            window.rootViewController = nav
-            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
-        }
+        viewModel.logout()
     }
 
     private func goToScene(_ vc: UIViewController) {
@@ -250,15 +184,15 @@ extension ProfileViewController: UITableViewDataSource {
 
         case .profile:
             let cell =  tableView.dequeueReusableCell(withIdentifier: ProfileCell.identifier, for: indexPath) as! ProfileCell
-            let name = currentUser?.name ?? "profile_loading".localized
-            cell.configure(with: name, tags: self.selectedInterests)
+            let name = viewModel.currentUser?.name ?? "profile_loading".localized
+            cell.configure(with: name, tags: viewModel.selectedInterests)
             
             return cell
 
         case .tokens:
             let cell = tableView.dequeueReusableCell(withIdentifier: TokenCell.identifier, for: indexPath) as! TokenCell
             cell.output = self
-            let coins = currentUser?.creditCount ?? 0
+            let coins = viewModel.currentUser?.creditCount ?? 0
             cell.configure(coins: coins)
             
             return cell
@@ -286,9 +220,6 @@ extension ProfileViewController: tokenCellOutputDelegate {
         let vc = BuyTokenViewController()
         vc.hidesBottomBarWhenPushed = true
         self.navigationController?.pushViewController(vc, animated: true)
-        
-        
-        
     }
     
 }
@@ -308,7 +239,7 @@ extension ProfileViewController: UITableViewDelegate {
                 if success {
                     print("💎 User earned tokens from ad!")
                     DispatchQueue.main.async {
-                        self?.fetchProfile() // Refresh coin balance
+                        self?.viewModel.fetchData() // Refresh coin balance
                         self?.showAlert(title: "Tebrikler! 💎", message: "Ödüllü reklamı izlediğiniz için hesabınıza jeton eklendi. Keyifli sohbetler dileriz!")
                     }
                 } else {
@@ -326,7 +257,7 @@ extension ProfileViewController: UITableViewDelegate {
 
         switch item {
         case .interests:
-            let vc = InterestsSelectionViewController(currentInterests: selectedInterests)
+            let vc = InterestsSelectionViewController(currentInterests: viewModel.selectedInterests)
             vc.delegate = self
             if let sheet = vc.sheetPresentationController {
                 sheet.detents = [.large()]
@@ -356,8 +287,6 @@ extension ProfileViewController: UITableViewDelegate {
         }
     }
 
-
-    
     func tableView(_ tableView: UITableView,
                    heightForHeaderInSection section: Int) -> CGFloat {
         return 8
@@ -378,40 +307,7 @@ extension ProfileViewController: UITableViewDelegate {
 
 extension ProfileViewController: InterestsSelectionDelegate {
     func didUpdateInterests(_ tags: [InterestModel]) {
-        self.selectedInterests = tags
-        if let header = tableView.tableHeaderView as? ProfileTableHeaderView {
-            
-            // header.configure(with: "", tags: selectedInterests)
-            
-            
-        }
-        tableView.reloadData()
-        
-        // Save to Firestore so filtering works for Guides (support both Int indices and String names)
-        if var user = currentUser {
-            let tagNames = tags.map { $0.name }
-            let tagIndices = tags.compactMap { interest -> Int? in
-                SharedTagsCloudView.categories.firstIndex(where: { $0.name == interest.name })
-            }
-            
-            let userModel = UserModel(
-                uid: user.uid,
-                name: user.name,
-                email: user.email,
-                photoURL: user.photoURL,
-                createdAt: user.createdAt,
-                interests: tagNames,
-                tagList: tagIndices,
-                age: user.age,
-                status: user.status,
-                blockedPublisherList: user.blockedPublisherList
-            )
-            FirestoreService.shared.saveUserProfile(user: userModel) { error in
-                if let error = error {
-                    print("Error saving interests to Firestore: \(error.localizedDescription)")
-                }
-            }
-        }
+        viewModel.updateInterests(tags)
     }
 }
 
@@ -445,32 +341,50 @@ extension ProfileViewController: ProfileTableHeaderViewDelegate, UIImagePickerCo
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
         picker.dismiss(animated: true) 
         
-        guard let editedImage = (info[.editedImage] as? UIImage) ?? (info[.originalImage] as? UIImage),
-              let uid = Auth.auth().currentUser?.uid else { return }
+        guard let editedImage = (info[.editedImage] as? UIImage) ?? (info[.originalImage] as? UIImage) else { return }
         
-        self.showLoading()
-        
-        StorageService.shared.uploadProfileImage(uid: uid, image: editedImage) { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let downloadURL):
-                FirestoreService.shared.updateProfileImageURL(uid: uid, url: downloadURL) { error in
-                    self.hideLoading()
-                    if let error = error {
-                        self.showAlert(title: "photo_error".localized, message: String(format: "photo_update_error".localized, error.localizedDescription))
-                    } else {
-                        if let header = self.tableView.tableHeaderView as? ProfileTableHeaderView {
-                            header.setProfileImage(editedImage)
-                        }
-                        self.showAlert(title: "photo_success".localized, message: "photo_update_success".localized)
-                    }
-                }
-                
-            case .failure(let error):
-                self.hideLoading()
-                self.showAlert(title: "photo_error".localized, message: error.localizedDescription)
-            }
+        viewModel.uploadPhoto(editedImage)
+    }
+}
+
+// MARK: - ViewModel Output
+extension ProfileViewController: ProfileViewModelOutput {
+    func didFetchUser(_ user: UserModel) {
+        tableView.reloadData()
+        updateHeader()
+    }
+    
+    func didUpdateInterests() {
+        tableView.reloadData()
+        // No alert needed, just UI update
+    }
+    
+    func didUpdatePhoto(url: String) {
+        if let header = self.tableView.tableHeaderView as? ProfileTableHeaderView {
+            header.setProfileImage(url: url)
+        }
+        self.showAlert(title: "photo_success".localized, message: "photo_update_success".localized)
+    }
+    
+    func didFail(with error: String) {
+        self.showAlert(title: "photo_error".localized, message: error)
+    }
+    
+    func setLoader(isVisible: Bool) {
+        if isVisible {
+            showLoading()
+        } else {
+            hideLoading()
+        }
+    }
+    
+    func didLogout() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first {
+            let loginVC = LoginViewController()
+            let nav = BaseNavigationController(rootViewController: loginVC)
+            window.rootViewController = nav
+            UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
         }
     }
 }

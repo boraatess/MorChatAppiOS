@@ -90,9 +90,8 @@ class HomeViewController: BaseVC {
 private extension HomeViewController {
 
     func setupUI() {
+        
         view.addSubview(storiesCollectionView)
-        view.addSubview(tagCollectionView)
-        view.addSubview(collectionView)
         
         storiesCollectionView.snp.makeConstraints { make in
             make.top.equalTo(headerView.snp.bottom).offset(8)
@@ -100,12 +99,15 @@ private extension HomeViewController {
             make.height.equalTo(100)
         }
         
+        view.addSubview(tagCollectionView)
+
         tagCollectionView.snp.makeConstraints { make in
             make.top.equalTo(storiesCollectionView.snp.bottom).offset(8)
             make.leading.trailing.equalToSuperview()
             make.height.equalTo(44)
         }
-        
+        view.addSubview(collectionView)
+
         collectionView.snp.makeConstraints {
             $0.top.equalTo(tagCollectionView.snp.bottom).offset(8)
             $0.leading.trailing.equalToSuperview().inset(8)

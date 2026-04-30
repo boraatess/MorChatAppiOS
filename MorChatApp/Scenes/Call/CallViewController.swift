@@ -35,6 +35,7 @@ final class CallViewController: BaseVC {
     private let switchCameraButton = UIButton(type: .system)
     private let cameraOffButton = UIButton(type: .system)
     private let endCallButton = UIButton(type: .system)
+    private let reportButton = UIButton(type: .system)
 
     // MARK: - State
     private var isMuted = false
@@ -119,9 +120,17 @@ final class CallViewController: BaseVC {
     // MARK: - Call Flow
     private func startCallerFlow() {
         guard let receiverId = profile.id else { return }
-        
-        // 1. Önce jeton kontrolü yap
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        
+        // Eğer kullanıcı 'guide' ise jeton kontrolü yapmadan aramayı başlat
+        if userType == "guide" {
+            self.startSignalingCall(receiverId: receiverId)
+            return
+        }
+        
+        // 1. Önce jeton kontrolü yap (Sadece normal kullanıcılar için)
         FirestoreService.shared.fetchUserProfile(uid: uid) { [weak self] result in
             guard let self = self else { return }
             switch result {
@@ -134,18 +143,22 @@ final class CallViewController: BaseVC {
                 }
                 
                 // 2. Jeton varsa aramayı başlat
-                self.signalingClient.createCall(receiverId: receiverId, isVideo: self.isVideoCall) { [weak self] callId in
-                    guard let self = self else { return }
-                    print("✅ Firestore: Arama oluşturuldu ID: \(callId)")
-                    self.agoraManager.joinChannel(channelId: callId)
-                    DispatchQueue.main.async {
-                        self.playAudio(named: "calling")
-                    }
-                }
+                self.startSignalingCall(receiverId: receiverId)
                 
             case .failure(let error):
                 print("❌ Jeton kontrolü hatası: \(error.localizedDescription)")
                 self.dismiss(animated: true)
+            }
+        }
+    }
+    
+    private func startSignalingCall(receiverId: String) {
+        self.signalingClient.createCall(receiverId: receiverId, isVideo: self.isVideoCall) { [weak self] callId in
+            guard let self = self else { return }
+            print("✅ Firestore: Arama oluşturuldu ID: \(callId)")
+            self.agoraManager.joinChannel(channelId: callId)
+            DispatchQueue.main.async {
+                self.playAudio(named: "calling")
             }
         }
     }
@@ -203,6 +216,11 @@ final class CallViewController: BaseVC {
         setupControl(button: switchCameraButton, icon: "arrow.triangle.2.circlepath.camera", bg: .darkGray)
         setupControl(button: cameraOffButton, icon: "video.fill", bg: .darkGray)
         setupControl(button: endCallButton, icon: "phone.down.fill", bg: .systemRed)
+        
+        reportButton.setImage(UIImage(systemName: "exclamationmark.bubble.fill"), for: .normal)
+        reportButton.tintColor = .white.withAlphaComponent(0.6)
+        reportButton.backgroundColor = .clear
+        view.addSubview(reportButton)
 
         if !isVideoCall {
             switchCameraButton.isHidden = true
@@ -227,6 +245,12 @@ final class CallViewController: BaseVC {
             make.centerX.equalToSuperview()
             make.width.equalTo(200)
             make.height.equalTo(64)
+        }
+        
+        reportButton.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide).offset(16)
+            make.trailing.equalToSuperview().inset(16)
+            make.size.equalTo(44)
         }
 
         nameLabel.snp.makeConstraints { make in
@@ -307,6 +331,45 @@ final class CallViewController: BaseVC {
         muteButton.addTarget(self, action: #selector(muteTapped), for: .touchUpInside)
         cameraOffButton.addTarget(self, action: #selector(cameraOffTapped), for: .touchUpInside)
         switchCameraButton.addTarget(self, action: #selector(switchCameraTapped), for: .touchUpInside)
+        reportButton.addTarget(self, action: #selector(reportTapped), for: .touchUpInside)
+    }
+    
+    @objc private func reportTapped() {
+        let alert = UIAlertController(title: "report_title".localized, message: "report_message".localized, preferredStyle: .actionSheet)
+        
+        let reasons = ["report_reason_abuse", "report_reason_harassment", "report_reason_nudity", "report_reason_other"]
+        
+        for reason in reasons {
+            alert.addAction(UIAlertAction(title: reason.localized, style: .default, handler: { [weak self] _ in
+                self?.sendReport(reason: reason.localized)
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "common_cancel".localized, style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func sendReport(reason: String) {
+        guard let reporterId = Auth.auth().currentUser?.uid,
+              let targetId = profile.id else { return }
+        
+        let reportData: [String: Any] = [
+            "reporterId": reporterId,
+            "targetId": targetId,
+            "targetName": profile.name ?? "",
+            "reason": reason,
+            "timestamp": FieldValue.serverTimestamp(),
+            "status": "pending",
+            "source": "call"
+        ]
+        
+        showLoading()
+        Firestore.firestore().collection("Reports").addDocument(data: reportData) { [weak self] error in
+            self?.hideLoading()
+            if error == nil {
+                self?.showAutoDismissAlert(title: "report_success_title".localized, message: "report_success_message".localized, duration: 2.0)
+            }
+        }
     }
 
     // MARK: - Animation & Timer
@@ -346,9 +409,12 @@ final class CallViewController: BaseVC {
     }
     
     private func deductCoinsForCall() {
-        // Arayan taraf mı kontrol et (Gelen aramada jeton düşmemeli, sadece arayan düşer - İş modeline göre değişebilir)
-        // Eğer her iki taraf da düşecekse bu kontrolü kaldırın.
+        // Gelen aramada jeton düşmemeli, sadece arayan düşer
         if incomingCallId != nil { return } 
+        
+        // Sadece 'user' (watcher) ise jeton düş, 'guide' ise düşme
+        let userType = UserDefaults.standard.string(forKey: "userType") ?? "user"
+        if userType == "guide" { return }
         
         FirestoreService.shared.deductCoins(amount: 10) { [weak self] error in
             if let error = error {

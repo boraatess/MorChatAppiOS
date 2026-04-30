@@ -70,7 +70,7 @@ extension BlockedUsersVC: ProfileHeaderViewDelegate {
 extension BlockedUsersVC {
     
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.App.screenBackground
         
         view.addSubview(profileHeader)
         profileHeader.snp.makeConstraints { make in
@@ -91,6 +91,7 @@ extension BlockedUsersVC {
         tableView.separatorStyle = .none
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.backgroundColor = .clear
         
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "blockedCell")
         
@@ -112,7 +113,12 @@ extension BlockedUsersVC: UITableViewDelegate, UITableViewDataSource {
         let user = blockedUsers[indexPath.row]
         cell.textLabel?.text = user.name
         cell.textLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cell.textLabel?.textColor = UIColor.App.primaryText
         cell.selectionStyle = .none
+        cell.backgroundColor = UIColor.App.cardBackground
+        cell.contentView.backgroundColor = UIColor.App.cardBackground
+        cell.layer.cornerRadius = 12
+        cell.layer.masksToBounds = true
         return cell
     }
     func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {

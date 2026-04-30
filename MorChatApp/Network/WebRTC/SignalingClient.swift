@@ -79,7 +79,7 @@ final class SignalingClient {
         
         var resultData: [String: Any] = [
             "callerId": callerId,
-            "calleeId": receiverId
+            "receiverId": receiverId
         ]
         
         let group = DispatchGroup()

@@ -61,6 +61,7 @@ final class CoinManager {
     }
 
     private let rewardedAdUnitID = "ca-app-pub-3940256099942544/1712485313"
+    
     private let productDefinitions: [ProductDefinition] = [
         ProductDefinition(productId: "com.morchat.coins.1", coinAmount: 1, badgeText: nil),
         ProductDefinition(productId: "com.morchat.coins.5", coinAmount: 5, badgeText: nil),

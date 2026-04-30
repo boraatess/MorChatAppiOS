@@ -4,6 +4,7 @@ import FirebaseAuth
 protocol GuideHomeViewModelOutput: AnyObject {
     func didFetchWatchers(_ watchers: [UserModel])
     func didFail(with error: String)
+    func setLoader(isVisible: Bool)
 }
 
 final class GuideHomeViewModel {
@@ -21,6 +22,7 @@ final class GuideHomeViewModel {
     func fetchData() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         
+        output?.setLoader(isVisible: true)
         firestoreService.fetchPublisherProfile(publisherId: uid) { [weak self] result in
             guard let self = self else { return }
             
@@ -40,11 +42,13 @@ final class GuideHomeViewModel {
                         
                         self.fetchAndFilterWatchers(guideTags: guideTagsIDs, guideInterests: guideInterests, allTags: allTags)
                     case .failure(let error):
+                        self.output?.setLoader(isVisible: false)
                         self.output?.didFail(with: "Tags Fetch Error: \(error.localizedDescription)")
                     }
                 }
                 
             case .failure(let error):
+                self.output?.setLoader(isVisible: false)
                 self.output?.didFail(with: error.localizedDescription)
             }
         }
@@ -86,29 +90,27 @@ final class GuideHomeViewModel {
                     return updated
                 }
                 
-                // 2. Perform Filtering
-                let filtered = mappedWatchers.filter { watcher in
-                    if guideTags.isEmpty && guideInterests.isEmpty { return true }
+                // 2. Perform Sorting (Instead of Filtering to not show an empty screen)
+                let sorted = mappedWatchers.sorted { w1, w2 in
+                    let overlap1 = Set(w1.tagList ?? []).intersection(guideTagSet).count
+                    let overlap2 = Set(w2.tagList ?? []).intersection(guideTagSet).count
                     
-                    // Match by ID
-                    if let watcherTags = watcher.tagList, !watcherTags.isEmpty {
-                        if !Set(watcherTags).isDisjoint(with: guideTagSet) { return true }
+                    if overlap1 != overlap2 {
+                        return overlap1 > overlap2 // Daha çok eşleşen üstte
                     }
                     
-                    // Match by Name
-                    if let watcherNames = watcher.interests, !watcherNames.isEmpty {
-                        let watcherNameSet = Set(watcherNames.map { $0.lowercased().trimmingCharacters(in: .whitespaces) })
-                        if !watcherNameSet.isDisjoint(with: guideNameSet) { return true }
-                    }
-                    
-                    return false
-                    
+                    // Eşitlik durumunda online olanları öne çıkar
+                    let isOnline1 = (w1.status == "Online" || w1.status == "Çevrimiçi") ? 1 : 0
+                    let isOnline2 = (w2.status == "Online" || w2.status == "Çevrimiçi") ? 1 : 0
+                    return isOnline1 > isOnline2
                 }
                 
-                print("DEBUG: Watchers count after filter: \(filtered) count: \(filtered.count)")
-                self.output?.didFetchWatchers(filtered)
+                print("DEBUG: Watchers count: \(sorted.count)")
+                self.output?.setLoader(isVisible: false)
+                self.output?.didFetchWatchers(sorted)
                 
             case .failure(let error):
+                self.output?.setLoader(isVisible: false)
                 self.output?.didFail(with: error.localizedDescription)
             }
         }

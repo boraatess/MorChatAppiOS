@@ -83,7 +83,7 @@ final class PublisherDetailViewController: BaseVC {
 
     // MARK: - Setup UI
     private func setupUI() {
-        view.backgroundColor = .white
+        view.backgroundColor = UIColor.App.screenBackground
         
         // Background Image
         backgroundImageView.contentMode = .scaleAspectFill
@@ -91,7 +91,7 @@ final class PublisherDetailViewController: BaseVC {
         view.addSubview(backgroundImageView)
         
         // Back Button
-        backButtonContainer.backgroundColor = UIColor.white.withAlphaComponent(0.3)
+        backButtonContainer.backgroundColor = UIColor.App.chromeOverlay
         backButtonContainer.layer.cornerRadius = 20
         backButtonContainer.clipsToBounds = true
         
@@ -104,7 +104,7 @@ final class PublisherDetailViewController: BaseVC {
         view.addSubview(backButtonContainer)
         
         // More Button
-        moreButtonContainer.backgroundColor = UIColor.white.withAlphaComponent(0.3)
+        moreButtonContainer.backgroundColor = UIColor.App.chromeOverlay
         moreButtonContainer.layer.cornerRadius = 20
         moreButtonContainer.clipsToBounds = true
         
@@ -117,7 +117,7 @@ final class PublisherDetailViewController: BaseVC {
         view.addSubview(moreButtonContainer)
         
         // Content Area
-        contentView.backgroundColor = .white
+        contentView.backgroundColor = UIColor.App.elevatedBackground
         contentView.layer.cornerRadius = 24
         contentView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         view.addSubview(contentView)
@@ -125,15 +125,15 @@ final class PublisherDetailViewController: BaseVC {
         // Header (Name & Status)
         nameLabel.font = .systemFont(ofSize: 26, weight: .bold) // Increased from 22
 
-        nameLabel.textColor = .black
+        nameLabel.textColor = UIColor.App.primaryText
         contentView.addSubview(nameLabel)
         
-        statusContainer.backgroundColor = UIColor(red: 1.0, green: 0.85, blue: 0.85, alpha: 1.0)
+        statusContainer.backgroundColor = UIColor.App.statusOfflineBackground
         statusContainer.layer.cornerRadius = 12
         statusContainer.clipsToBounds = true
         
         statusLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        statusLabel.textColor = .systemRed
+        statusLabel.textColor = UIColor.App.statusOfflineText
         statusLabel.textAlignment = .center
         
         statusContainer.addSubview(statusLabel)
@@ -154,7 +154,7 @@ final class PublisherDetailViewController: BaseVC {
         
         // Description
         descLabel.font = .systemFont(ofSize: 16) // Increased from 14
-        descLabel.textColor = .systemPurple
+        descLabel.textColor = UIColor.App.secondaryText
 
         descLabel.numberOfLines = 0
         contentView.addSubview(descLabel)
@@ -181,7 +181,7 @@ final class PublisherDetailViewController: BaseVC {
         // Footer Label
         infoFooterLabel.text = "pub_footer_info".localized
         infoFooterLabel.font = .systemFont(ofSize: 10)
-        infoFooterLabel.textColor = .gray
+        infoFooterLabel.textColor = UIColor.App.tertiaryText
         infoFooterLabel.numberOfLines = 2
         infoFooterLabel.textAlignment = .center
         contentView.addSubview(infoFooterLabel)
@@ -197,7 +197,7 @@ final class PublisherDetailViewController: BaseVC {
         button.tintColor = .white
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold) // Increased from 14
-        button.backgroundColor = UIColor(red: 0.35, green: 0.1, blue: 0.45, alpha: 1.0) 
+        button.backgroundColor = UIColor.App.actionBackground
 
         button.layer.cornerRadius = 8
     }
@@ -302,20 +302,20 @@ final class PublisherDetailViewController: BaseVC {
         statusLabel.text = isOnline ? "pub_status_online".localized : "pub_status_away".localized
         
         if isOnline {
-            statusContainer.backgroundColor = UIColor(red: 0.85, green: 1.0, blue: 0.85, alpha: 1.0)
-            statusLabel.textColor = UIColor(red: 0.1, green: 0.6, blue: 0.1, alpha: 1.0)
+            statusContainer.backgroundColor = UIColor.App.statusOnlineBackground
+            statusLabel.textColor = UIColor.App.statusOnlineText
         } else {
-            statusContainer.backgroundColor = UIColor(red: 1.0, green: 0.85, blue: 0.85, alpha: 1.0)
-            statusLabel.textColor = .systemRed
+            statusContainer.backgroundColor = UIColor.App.statusOfflineBackground
+            statusLabel.textColor = UIColor.App.statusOfflineText
         }
         
         if let urlStr = profile.profilePic, let url = URL(string: urlStr) {
             backgroundImageView.kf.setImage(with: url)
             currentSelectedUrl = urlStr
         } else {
-            backgroundImageView.backgroundColor = .lightGray
+            backgroundImageView.backgroundColor = UIColor.App.secondaryElevatedBackground
             backgroundImageView.image = UIImage(systemName: "person.crop.rectangle.fill")
-            backgroundImageView.tintColor = .darkGray
+            backgroundImageView.tintColor = UIColor.App.secondaryText
         }
         
         descLabel.text = profile.about ?? "pub_about_default".localized
@@ -329,12 +329,12 @@ final class PublisherDetailViewController: BaseVC {
     
     private func addTag(_ title: String) {
         let container = UIView()
-        container.backgroundColor = UIColor(red: 1.0, green: 0.9, blue: 0.95, alpha: 1.0) // Light pink
+        container.backgroundColor = UIColor.App.secondaryElevatedBackground
         container.layer.cornerRadius = 6
         
         let lbl = UILabel()
         lbl.text = title
-        lbl.textColor = UIColor(red: 0.9, green: 0.4, blue: 0.6, alpha: 1.0) // Dark pink
+        lbl.textColor = UIColor.App.primary
         lbl.font = .systemFont(ofSize: 11, weight: .bold)
         
         container.addSubview(lbl)
@@ -485,9 +485,40 @@ extension PublisherDetailViewController: PublisherActionSheetDelegate {
     }
     
     func didTapReport() {
-        print("Report tapped")
+        let alert = UIAlertController(title: "report_title".localized, message: "report_message".localized, preferredStyle: .actionSheet)
         
+        let reasons = ["report_reason_abuse", "report_reason_harassment", "report_reason_nudity", "report_reason_other"]
         
+        for reason in reasons {
+            alert.addAction(UIAlertAction(title: reason.localized, style: .default, handler: { [weak self] _ in
+                self?.sendReport(reason: reason.localized)
+            }))
+        }
+        
+        alert.addAction(UIAlertAction(title: "common_cancel".localized, style: .cancel))
+        present(alert, animated: true)
+    }
+    
+    private func sendReport(reason: String) {
+        guard let reporterId = Auth.auth().currentUser?.uid,
+              let targetId = profile.id else { return }
+        
+        let reportData: [String: Any] = [
+            "reporterId": reporterId,
+            "targetId": targetId,
+            "targetName": profile.name ?? "",
+            "reason": reason,
+            "timestamp": FieldValue.serverTimestamp(),
+            "status": "pending"
+        ]
+        
+        showLoading()
+        Firestore.firestore().collection("Reports").addDocument(data: reportData) { [weak self] error in
+            self?.hideLoading()
+            if error == nil {
+                self?.showAutoDismissAlert(title: "report_success_title".localized, message: "report_success_message".localized, duration: 2.0)
+            }
+        }
     }
     
     private func checkIfFavorited() {

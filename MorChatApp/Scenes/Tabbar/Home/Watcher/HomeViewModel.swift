@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import FirebaseFirestore
+import FirebaseAuth
 
 protocol HomeViewModelInputprotocol: AnyObject {
     func viewDidLoad()
@@ -35,6 +36,7 @@ class HomeViewModel: HomeViewModelInputprotocol {
     
     private let firestoreService: FirestoreServiceProtocol
     private var profilesListener: FirebaseFirestore.ListenerRegistration?
+    private var currentUserTagList: [Int] = []
     // Dinleyiciyi saklamak için
     
     private var availableTags: [String] {
@@ -56,7 +58,18 @@ class HomeViewModel: HomeViewModelInputprotocol {
     
     func viewDidLoad() {
         output?.didFetchTags(availableTags)
+        fetchCurrentUserInterests()
         startListeningUsers()
+    }
+    
+    private func fetchCurrentUserInterests() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        firestoreService.fetchUserProfile(uid: uid) { [weak self] result in
+            if case .success(let user) = result {
+                self?.currentUserTagList = user.tagList ?? []
+                self?.applyFilter()
+            }
+        }
     }
     
     // MARK: - Filtering
@@ -104,7 +117,20 @@ class HomeViewModel: HomeViewModelInputprotocol {
                 return tagNames.contains(tag)
             }
         } else {
-            filteredProfiles = allProfiles
+            // Hiçbir tag seçili değilse, kullanıcının ilgi alanlarına göre sırala (Personalize)
+            filteredProfiles = allProfiles.sorted { p1, p2 in
+                let overlap1 = Set(p1.tagList ?? []).intersection(currentUserTagList).count
+                let overlap2 = Set(p2.tagList ?? []).intersection(currentUserTagList).count
+                
+                if overlap1 != overlap2 {
+                    return overlap1 > overlap2 // Daha çok eşleşen üstte
+                }
+                
+                // Eşitlik durumunda online olanları öne çıkar
+                let isOnline1 = (p1.status == "Online" || p1.status == "Çevrimiçi") ? 1 : 0
+                let isOnline2 = (p2.status == "Online" || p2.status == "Çevrimiçi") ? 1 : 0
+                return isOnline1 > isOnline2
+            }
         }
         
         // 2. UI modeline çevir (AMA referansı KORU 🔥)

@@ -46,8 +46,10 @@ final class AppRulesCell: UITableViewCell {
         iconImageView.contentMode = .scaleAspectFit
         
         titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.textColor = UIColor.App.primaryText
         
         messageLabel.font = .systemFont(ofSize: 16)
+        messageLabel.textColor = UIColor.App.secondaryText
         messageLabel.numberOfLines = 0
         
         setupConstraints()
@@ -87,5 +89,7 @@ final class AppRulesCell: UITableViewCell {
         titleLabel.text = item.title
         messageLabel.text = item.message
         containerView.backgroundColor = item.containerColor
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = UIColor.App.border.cgColor
     }
 }

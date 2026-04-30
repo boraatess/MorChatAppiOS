@@ -23,7 +23,7 @@ final class ProfileHeaderView: UIView {
         let button = UIButton(type: .system)
         let image = UIImage(systemName: "chevron.left")
         button.setImage(image, for: .normal)
-        button.tintColor = .black
+        button.tintColor = UIColor.App.primaryText
         button.addTarget(self, action: #selector(didTapBack), for: .touchUpInside)
         return button
     }()
@@ -39,7 +39,7 @@ final class ProfileHeaderView: UIView {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 20, weight: .bold)
-        label.textColor = UIColor.black
+        label.textColor = UIColor.App.primaryText
         return label
     }()
     
@@ -47,7 +47,7 @@ final class ProfileHeaderView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        backgroundColor = .white
+        backgroundColor = UIColor.App.screenBackground
         setupUI()
     }
 

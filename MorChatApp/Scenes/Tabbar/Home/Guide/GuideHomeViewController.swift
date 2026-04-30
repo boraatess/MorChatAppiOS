@@ -66,6 +66,14 @@ extension GuideHomeViewController: GuideHomeViewModelOutput {
     func didFail(with error: String) {
         showAutoDismissAlert(title: "home_error_title".localized, message: error, duration: 2.0)
     }
+    
+    func setLoader(isVisible: Bool) {
+        if isVisible {
+            showLoading()
+        } else {
+            hideLoading()
+        }
+    }
 }
 
 extension GuideHomeViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
