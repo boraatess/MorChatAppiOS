@@ -19,7 +19,15 @@ final class GuideHomeViewController: BaseVC {
         cv.register(UserCardCell.self, forCellWithReuseIdentifier: UserCardCell.identifier)
         cv.delegate = self
         cv.dataSource = self
+        cv.refreshControl = refreshControl
         return cv
+    }()
+
+    private lazy var refreshControl: UIRefreshControl = {
+        let rc = UIRefreshControl()
+        rc.tintColor = .white
+        rc.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        return rc
     }()
 
     override func viewDidLoad() {
@@ -46,7 +54,10 @@ final class GuideHomeViewController: BaseVC {
             make.leading.trailing.equalToSuperview()
             make.bottom.equalToSuperview()
         }
-        
+    }
+
+    @objc private func handleRefresh() {
+        viewModel.viewDidLoad()
     }
     
     private func setupConstraints() {
@@ -69,9 +80,12 @@ extension GuideHomeViewController: GuideHomeViewModelOutput {
     
     func setLoader(isVisible: Bool) {
         if isVisible {
-            showLoading()
+            if !refreshControl.isRefreshing {
+                showLoading()
+            }
         } else {
             hideLoading()
+            refreshControl.endRefreshing()
         }
     }
 }

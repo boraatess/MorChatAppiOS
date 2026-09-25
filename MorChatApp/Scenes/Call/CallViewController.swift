@@ -521,14 +521,9 @@ extension CallViewController: AgoraManagerDelegate {
     func agoraManager(_ manager: AgoraManager, didJoinedChannel channel: String) {
         print("✅ Agora: Kanala katılım başarılı: \(channel)")
         DispatchQueue.main.async {
-            // Loader ve arkasındaki kutuyu tamamen gizle
-            self.loadingIndicator.stopAnimating()
-            self.loadingIndicator.isHidden = true
-            self.loadingContainer.isHidden = true
+            self.hideLoading()
             self.connectingLabel.text = "Bağlanıyor..."
         }
-        
-        
     }
 }
 

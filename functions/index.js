@@ -1,10 +1,22 @@
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
 const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
+const apn = require('@parse/node-apn'); // 📞 VoIP için APNs modülü
 
 admin.initializeApp();
 
 setGlobalOptions({ maxInstances: 10 });
+
+// ⚠️ BURAYI KENDİ BİLGİLERİNİZLE DOLDURUN VE .p8 DOSYASINI BU KLASÖRE KOYUN ⚠️
+const apnOptions = {
+    token: {
+        key: __dirname + "/AuthKey_7BGV4PGN3M.p8", // İndirdiğiniz .p8 dosyasının İSMİ
+        keyId: "7BGV4PGN3M",                // Apple Developer'daki 10 haneli Key ID
+        teamId: "32QGKVDU76"               // Apple Developer'daki 10 haneli Team ID
+    },
+    production: false // TestFlight / Geliştirme için false. App Store için true.
+};
+let apnProvider = new apn.Provider(apnOptions);
 
 /**
  * Arama oluşturulduğunda tetiklenen v2 fonksiyonu
@@ -24,7 +36,7 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
     try {
         // --- 1. Alıcının Bilgilerini ve Token'larını Bul ---
         let receiverData = null;
-        
+
         // Önce yayıncılarda (PublisherProfile) ara
         let receiverDoc = await admin.firestore().collection("PublisherProfile").doc(receiverId).get();
         if (receiverDoc.exists) {
@@ -52,36 +64,26 @@ exports.oncallcreated = onDocumentCreated("Calls/{callId}", async (event) => {
         if (!callerDoc.exists) {
             callerDoc = await admin.firestore().collection("PublisherProfile").doc(callerId).get();
         }
-        
+
         if (callerDoc.exists) {
             callerName = callerDoc.data().name || callerName;
         }
 
         // --- 3. VoIP Bildirimi Gönder (Uygulama kapalıyken çaldırmak için) ---
         if (voipToken) {
-            const voipPayload = {
-                token: voipToken,
-                data: {
-                    callId: event.params.callId,
-                    callerId: callerId,
-                    video: isVideo ? "true" : "false"
-                },
-                apns: {
-                    headers: {
-                        "apns-priority": "10",
-                        "apns-push-type": "voip"
-                    },
-                    payload: {
-                        aps: {
-                            "content-available": 1
-                        }
-                    }
-                }
+            let note = new apn.Notification();
+            note.pushType = "voip";
+            note.topic = "com.boraates.MorChatApp.voip"; // Uygulamanızın Bundle ID'si + .voip
+            note.payload = {
+                callId: event.params.callId,
+                callerId: callerId,
+                video: isVideo ? "true" : "false",
+                callerName: callerName
             };
 
             try {
-                await admin.messaging().send(voipPayload);
-                console.log(`✅ VoIP Push gönderildi: ${receiverName}`);
+                const result = await apnProvider.send(note, voipToken);
+                console.log(`✅ VoIP Push Sonucu (${receiverName}):`, JSON.stringify(result));
             } catch (err) {
                 console.error("❌ VoIP Push hatası:", err);
             }

@@ -15,7 +15,11 @@ class AgoraManager: NSObject {
     private var appId: String = "cea6f9fff71043659e499bf8b909f7e2"
     
     // Agora Konsolu'ndan aldığınız Geçici Token (Şifre)
-    private let tempToken = "007eJxTYHhm0HXY5MSbWi3tR777dVIuSH1rkj117abfnZPy8//ISiQoMCSnJpqlWaalpZkbGpgYm5lapppYWialWSRZGlimmacamXHezGwIZGTgvD6NlZEBAkF8FoaS1OISBgYAvawglA=="
+    private let tempToken = "007eJxTYOA9a/K+Xch5Y3Cl0m3ZQG+bybOPPOhkdGh83Zz68cp8Z1EFhuTURLM0y7S0NHNDAxNjM1PLVBNLy6Q0iyRLA8s081Qj5/r/mQ2BjAwqWxWYGRkgEMRnZUhOzMkpZmAAADnSHy0="
+    
+    
+    // 007eJxTYOA9a/K+Xch5Y3Cl0m3ZQG+bybOPPOhkdGh83Zz68cp8Z1EFhuTURLM0y7S0NHNDAxNjM1PLVBNLy6Q0iyRLA8s081Qj5/r/mQ2BjAwqWxWYGRkgEMRnZUhOzMkpZmAAADnSHy0=
+    
     
     var agoraKit: AgoraRtcEngineKit?
     weak var delegate: AgoraManagerDelegate?

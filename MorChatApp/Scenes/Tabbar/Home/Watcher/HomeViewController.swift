@@ -56,7 +56,15 @@ class HomeViewController: BaseVC {
                     forCellWithReuseIdentifier: PublisherCardCell.identifier)
         cv.delegate = self
         cv.dataSource = self
+        cv.refreshControl = refreshControl
         return cv
+    }()
+
+    private lazy var refreshControl: UIRefreshControl = {
+        let rc = UIRefreshControl()
+        rc.tintColor = .white
+        rc.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        return rc
     }()
 
     // 🔥 TEK DATA SOURCE
@@ -113,6 +121,10 @@ private extension HomeViewController {
             $0.leading.trailing.equalToSuperview().inset(8)
             $0.bottom.equalToSuperview()
         }
+    }
+
+    @objc func handleRefresh() {
+        viewModel.viewDidLoad()
     }
 }
 
@@ -242,9 +254,12 @@ extension HomeViewController: HomeViewModelOutputprotocol {
 
     func setLoader(isVisible: Bool) {
         if isVisible {
-            showLoading()
+            if !refreshControl.isRefreshing {
+                showLoading()
+            }
         } else {
             hideLoading()
+            refreshControl.endRefreshing()
         }
     }
 }
